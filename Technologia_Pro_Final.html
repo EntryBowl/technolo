@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TECHNOLOGIA — Analizator Spółek Technologicznych</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07090e;--bg2:#0d1117;--bg3:#131924;--bg4:#1a2230;--bg5:#212d3d;
+  --border:rgba(99,179,255,0.07);--border2:rgba(99,179,255,0.15);--border3:rgba(99,179,255,0.25);
+  --text:#e2eaf6;--text2:#7a90b0;--text3:#3d5070;
+  --blue:#3b82f6;--blue2:#2563eb;--blue3:#1d4ed8;
+  --cyan:#06b6d4;--cyan2:#0891b2;
+  --purple:#8b5cf6;--purple2:#7c3aed;
+  --green:#22c55e;--green2:#16a34a;
+  --amber:#f59e0b;--amber2:#d97706;
+  --red:#ef4444;--red2:#dc2626;
+  --pink:#ec4899;--orange:#f97316;
+  --mono:'DM Mono',Consolas,monospace;--sans:'Inter','Segoe UI',sans-serif;
+  --accent:var(--blue);--accent2:var(--blue2);
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:228px 1fr;min-height:100vh}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.main{overflow:hidden;min-width:0}
+
+/* SIDEBAR */
+.sidebar-logo{padding:18px 16px 14px;border-bottom:1px solid var(--border)}
+.logo-mark{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--cyan);margin-bottom:4px}
+.logo-title{font-size:18px;font-weight:700;color:var(--text);letter-spacing:1px;background:linear-gradient(90deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+
+.s-section{padding:14px 12px 5px;font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .15s;color:var(--text2);font-size:13px;margin:1px 6px}
+.nav-item:hover{background:var(--bg4);color:var(--text)}
+.nav-item.active{background:rgba(59,130,246,0.1);color:var(--blue);border-left:2px solid var(--blue)}
+.nav-icon{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+
+.s-ticker-box{padding:10px;margin:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px}
+.s-ticker-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:6px}
+.s-ticker-in{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:7px 10px;font-family:var(--mono);font-size:14px;font-weight:500;color:var(--text);outline:none;text-transform:uppercase;letter-spacing:2px;transition:border-color .2s}
+.s-ticker-in:focus{border-color:var(--blue)}
+.s-ticker-in::placeholder{text-transform:none;letter-spacing:0;font-size:12px;color:var(--text3)}
+.btn-analyze{width:100%;margin-top:8px;background:linear-gradient(135deg,var(--blue),var(--cyan));border:none;border-radius:6px;padding:9px;font-family:var(--sans);font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:opacity .15s}
+.btn-analyze:hover{opacity:.85}
+.s-chips-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--text3);margin:8px 0 5px}
+.s-chips{display:flex;flex-wrap:wrap;gap:4px}
+.s-chip{font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:2px 7px;cursor:pointer;transition:all .15s}
+.s-chip:hover{border-color:var(--blue);color:var(--blue)}
+
+.s-mini-scores{padding:8px;margin:0 8px 8px}
+.mini-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px;border-bottom:1px solid var(--border)}
+.mini-row:last-child{border-bottom:none}
+.mini-lbl{color:var(--text2)}
+.mini-val{font-family:var(--mono);font-weight:500}
+
+.s-footer{margin-top:auto;padding:12px;font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;border-top:1px solid var(--border)}
+
+/* TOPBAR */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.tb-left{display:flex;align-items:center;gap:14px;min-width:0}
+.tb-ticker{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--blue);letter-spacing:4px;flex-shrink:0}
+.tb-company{font-size:14px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-badge{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2);flex-shrink:0;white-space:nowrap}
+.tb-right{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.tb-score-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;text-align:right}
+.tb-score-num{font-family:var(--mono);font-size:26px;font-weight:600;text-align:right}
+
+/* CONTENT */
+.content{padding:20px 24px;overflow-y:auto;max-height:calc(100vh - 57px)}
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:0}
+.card-title{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+
+/* METRIC CARDS */
+.mc{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem}
+.mc-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.mc-val{font-family:var(--mono);font-size:26px;font-weight:500;line-height:1;margin-bottom:4px}
+.mc-sub{font-size:11px;color:var(--text3);line-height:1.4}
+.mc-bar{margin-top:8px;height:3px;background:var(--bg5);border-radius:3px;overflow:hidden}
+.mc-fill{height:100%;border-radius:3px;transition:width 1.2s ease}
+.c-b{color:var(--blue)}.c-c{color:var(--cyan)}.c-g{color:var(--green)}.c-a{color:var(--amber)}.c-r{color:var(--red)}.c-p{color:var(--purple)}.c-pk{color:var(--pink)}
+
+/* SCORE RING */
+.ring-wrap{display:flex;align-items:center;gap:12px;padding:6px 0;border-bottom:1px solid var(--border)}
+.ring-wrap:last-child{border-bottom:none}
+.ring{width:52px;height:52px;position:relative;flex-shrink:0}
+.ring svg{transform:rotate(-90deg)}
+.ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:500}
+.ring-info{}
+.ring-label{font-size:13px;color:var(--text);font-weight:500}
+.ring-sub{font-size:11px;color:var(--text3);margin-top:1px}
+
+/* SEC TITLE */
+.sec-title{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:var(--text3);text-transform:uppercase;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+
+/* INDICATOR ROW */
+.irow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.irow:last-child{border-bottom:none}
+.irow-label{color:var(--text2)}
+.irow-val{font-family:var(--mono);font-weight:500}
+
+/* AI BLOCK */
+.ai-block{background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);border-radius:10px;padding:1rem 1.25rem}
+.ai-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--blue)}
+.ai-text{font-size:13px;color:var(--text2);line-height:1.75}
+
+/* TAGS */
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:4px}
+.tag.g{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.tag.a{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.tag.r{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.tag.b{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)}
+.tag.p{background:rgba(139,92,246,.1);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+.tag.c{background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2)}
+
+/* SW ITEMS */
+.sw-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text2);line-height:1.4}
+.sw-item:last-child{border-bottom:none}
+.sw-dot{width:5px;height:5px;border-radius:50%;margin-top:5px;flex-shrink:0}
+
+/* PROBABILITY */
+.prob-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.prob-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.prob-pct{font-family:var(--mono);font-size:18px;font-weight:600;min-width:48px}
+.prob-name{font-size:13px;color:var(--text);font-weight:500;flex:1}
+.prob-bar-wrap{height:4px;background:var(--bg5);border-radius:4px;overflow:hidden;margin-bottom:8px}
+.prob-bar{height:100%;border-radius:4px;transition:width 1s ease}
+.prob-details{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pd{text-align:center}
+.pd-label{font-family:var(--mono);font-size:9px;letter-spacing:1px;color:var(--text3);margin-bottom:2px;text-transform:uppercase}
+.pd-val{font-family:var(--mono);font-size:11px;font-weight:500}
+
+/* SCENARIOS */
+.scen-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.scen-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+.scen-card.bull{border-top:3px solid var(--green)}
+.scen-card.neu{border-top:3px solid var(--blue)}
+.scen-card.bear{border-top:3px solid var(--red)}
+.scen-lbl{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.scen-card.bull .scen-lbl{color:var(--green)}.scen-card.neu .scen-lbl{color:var(--blue)}.scen-card.bear .scen-lbl{color:var(--red)}
+.scen-prob{font-family:var(--mono);font-size:36px;font-weight:600;line-height:1;margin-bottom:6px}
+.scen-range{font-family:var(--mono);font-size:13px;color:var(--text2);margin-bottom:10px}
+.scen-items{display:flex;flex-direction:column;gap:5px}
+.scen-item{font-size:12px;color:var(--text3);display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+
+/* HEATMAP */
+.heatmap{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.heat-cell{border-radius:8px;padding:10px;text-align:center}
+.heat-label{font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.heat-val{font-family:var(--mono);font-size:18px;font-weight:600}
+.heat-sub{font-size:10px;margin-top:2px}
+
+/* SAAS FUNNEL */
+.funnel-row{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:8px;margin-bottom:6px;background:var(--bg3);border:1px solid var(--border)}
+.funnel-label{font-size:13px;color:var(--text2)}
+.funnel-val{font-family:var(--mono);font-size:14px;font-weight:500}
+.funnel-bar-col{flex:1;margin:0 12px;height:6px;background:var(--bg5);border-radius:3px;overflow:hidden}
+.funnel-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--cyan))}
+
+/* RULE40 */
+.rule40-display{display:flex;align-items:center;justify-content:center;gap:24px;padding:1.5rem 0}
+.rule40-num{font-family:var(--mono);font-size:56px;font-weight:700;line-height:1}
+.rule40-label{font-size:13px;color:var(--text2)}
+.rule40-eq{font-family:var(--mono);font-size:24px;color:var(--text3)}
+.rule40-part{text-align:center}
+.rule40-part-num{font-family:var(--mono);font-size:28px;font-weight:600}
+.rule40-part-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* PASTE OVERLAY */
+.paste-overlay{position:fixed;inset:0;background:rgba(7,9,14,.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;padding:1rem}
+.paste-overlay.show{display:flex}
+.paste-box{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:2rem;width:100%;max-width:680px;max-height:90vh;overflow-y:auto}
+.paste-title-top{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--blue);margin-bottom:8px}
+.paste-company-lbl{font-size:22px;font-weight:700;margin-bottom:4px}
+.paste-sub-text{font-size:13px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6}
+.prompt-box-inner{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:1.25rem}
+.prompt-inner-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--blue);margin-bottom:8px}
+.prompt-inner-text{font-family:var(--mono);font-size:11px;color:var(--text2);line-height:1.6;max-height:160px;overflow-y:auto;white-space:pre-wrap}
+.btn-copy-prompt{background:var(--bg4);border:1px solid var(--border2);border-radius:6px;padding:5px 14px;font-family:var(--mono);font-size:11px;color:var(--text2);cursor:pointer;margin-top:8px;transition:all .15s}
+.btn-copy-prompt:hover{border-color:var(--blue);color:var(--blue)}
+.paste-textarea{width:100%;min-height:130px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:12px;font-family:var(--mono);font-size:11px;color:var(--text);resize:vertical;outline:none;margin-bottom:10px}
+.paste-textarea:focus{border-color:var(--blue)}
+.paste-btn-row{display:flex;gap:10px}
+.btn-run{background:linear-gradient(135deg,var(--blue),var(--cyan));border:none;border-radius:8px;padding:10px 24px;font-family:var(--sans);font-size:13px;font-weight:700;color:#fff;cursor:pointer}
+.btn-cancel{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 18px;font-family:var(--mono);font-size:12px;color:var(--text2);cursor:pointer}
+
+/* WELCOME */
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:70vh;text-align:center;padding:2rem}
+.welcome-icon{font-size:52px;margin-bottom:1.5rem}
+.welcome-title{font-size:28px;font-weight:700;margin-bottom:8px;background:linear-gradient(90deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.welcome-sub{font-size:14px;color:var(--text2);margin-bottom:2rem;max-width:460px;line-height:1.7}
+.welcome-chips{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.welcome-chip{background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px 16px;font-family:var(--mono);font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
+.welcome-chip:hover{border-color:var(--blue);color:var(--blue)}
+
+/* HISTORY */
+.hist-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s;margin-bottom:6px}
+.hist-item:hover{border-color:var(--border2)}
+.hist-ticker{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--blue);min-width:60px}
+.hist-name{font-size:12px;color:var(--text2);flex:1}
+.hist-score{font-family:var(--mono);font-size:16px;font-weight:600}
+.hist-date{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.hist-del{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 7px;border-radius:4px;font-size:12px}
+.hist-del:hover{color:var(--red)}
+
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}.sidebar{display:none}
+  .g4{grid-template-columns:repeat(2,1fr)}.scen-grid{grid-template-columns:1fr}
+  .prob-details{grid-template-columns:repeat(2,1fr)}.heatmap{grid-template-columns:repeat(2,1fr)}
+}
+
+/* TOOLTIPS */
+.tt{display:inline-flex;align-items:center;gap:4px;cursor:help}
+.tt-icon{width:14px;height:14px;border-radius:50%;background:rgba(99,179,255,.15);border:1px solid rgba(99,179,255,.25);display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:var(--text3);font-style:normal;flex-shrink:0;transition:all .15s}
+.tt:hover .tt-icon{background:rgba(59,130,246,.25);border-color:var(--blue);color:var(--blue)}
+#tt-global{position:fixed;background:#1a2436;border:1px solid rgba(99,179,255,.25);border-radius:8px;padding:10px 14px;width:260px;z-index:99999;pointer-events:none;display:none;box-shadow:0 8px 32px rgba(0,0,0,.8)}
+#tt-global.show{display:block}
+#tt-global .tt-box-title{font-family:var(--mono);font-size:10px;letter-spacing:1px;color:var(--blue);margin-bottom:5px;font-weight:500}
+#tt-global .tt-box-text{font-size:12px;color:var(--text2);line-height:1.6}
+#tt-global .tt-box-good{font-size:11px;color:var(--green);margin-top:5px}
+#tt-global .tt-box-bad{font-size:11px;color:var(--red);margin-top:5px}
+
+/* COMPANY DESCRIPTION BOX */
+.company-desc-box{background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.12);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:none}
+.company-desc-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.company-desc-logo{width:36px;height:36px;border-radius:8px;background:rgba(59,130,246,.15);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:13px;font-weight:700;color:var(--blue)}
+.company-desc-name{font-size:15px;font-weight:600;color:var(--text)}
+.company-desc-sector{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.company-desc-text{font-size:13px;color:var(--text2);line-height:1.7}
+.company-desc-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+<style id="pdf-print-styles">
+@media print {
+  .sidebar, .topbar, .paste-overlay, .overlay, #ovImport,
+  .btn-pdf, .btn-share, [onclick*="navTo"], [onclick*="goTo"],
+  .nav-item, #periodBtns, .btn-import, .btn-analyze,
+  .s-btns, .s-footer { display: none !important; }
+  
+  .layout, .main, body { display: block !important; }
+  .content { max-height: none !important; overflow: visible !important; padding: 0 !important; }
+  .page { display: block !important; break-inside: avoid; }
+  
+  canvas { max-width: 100% !important; }
+  
+  @page {
+    size: A4;
+    margin: 15mm 12mm 15mm 12mm;
+  }
+}
+/* KALKULATOR ZYSKU */
+.calc-panel{background:rgba(99,102,241,.05);border:1px solid rgba(99,102,241,.15);border-radius:12px;padding:1.1rem;margin-bottom:0}
+.calc-panel-h{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:#6366f1;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.calc-field{display:flex;flex-direction:column;gap:4px}
+.calc-lbl{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase}
+.calc-inp{background:var(--bg3);border:1px solid rgba(99,179,255,.14);border-radius:7px;padding:8px 10px;font-family:var(--mono);font-size:14px;color:var(--text);outline:none;transition:border-color .2s;width:100%}
+.calc-inp:focus{border-color:#6366f1}
+.calc-inp.prefilled{border-color:rgba(6,182,212,.35);color:var(--cyan)}
+.calc-results{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.calc-res-card{background:var(--bg3);border:1px solid rgba(99,179,255,.07);border-radius:9px;padding:10px;text-align:center}
+.calc-res-lbl{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.calc-res-val{font-family:var(--mono);font-size:18px;font-weight:700;line-height:1}
+.calc-res-sub{font-size:10px;color:var(--text3);margin-top:3px}
+</style>
+</style>
+</head>
+<body>
+
+<!-- GLOBAL TOOLTIP -->
+<div id="tt-global">
+  <div class="tt-box-title" id="tt-title"></div>
+  <div class="tt-box-text" id="tt-text"></div>
+  <div class="tt-box-good" id="tt-good" style="display:none"></div>
+  <div class="tt-box-bad" id="tt-bad" style="display:none"></div>
+</div>
+
+<!-- PASTE OVERLAY -->
+<div class="paste-overlay" id="pasteOverlay">
+  <div class="paste-box">
+    <div class="paste-title-top">NOWA ANALIZA</div>
+    <div class="paste-company-lbl" id="pTicker"></div>
+    <div class="paste-sub-text">Skopiuj prompt → wklej do <b>claude.ai</b> (musi mieć włączony web search!) → poczekaj → wklej odpowiedź</div>
+    <div class="prompt-box-inner">
+      <div class="prompt-inner-label">PROMPT DLA CLAUDE.AI</div>
+      <div class="prompt-inner-text" id="promptText"></div>
+      <button class="btn-copy-prompt" onclick="copyPrompt()">📋 Kopiuj prompt</button>
+    </div>
+    <textarea class="paste-textarea" id="pasteArea" placeholder="Wklej tutaj całą odpowiedź Claude (JSON)..."></textarea>
+    <div class="paste-btn-row">
+      <button class="btn-run" onclick="parseAndRender()">Wyświetl dashboard →</button>
+      <button class="btn-cancel" onclick="closePaste()">Anuluj</button>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">⬡ ANALIZATOR</div>
+      <div class="logo-title">TECHNOLOGIA</div>
+      <div class="logo-sub">v1.0 · HEDGE FUND EDITION</div>
+    </div>
+
+    <div class="s-section">Analiza</div>
+    <div class="nav-item active" onclick="navTo('overview',this)"><span class="nav-icon">⬛</span>Przegląd</div>
+    <div class="nav-item" onclick="navTo('growth',this)"><span class="nav-icon">🚀</span>Wzrost i SaaS</div>
+    <div class="nav-item" onclick="navTo('margins',this)"><span class="nav-icon">💰</span>Marże i FCF</div>
+    <div class="nav-item" onclick="navTo('moat',this)"><span class="nav-icon">🏰</span>Przewaga (Moat)</div>
+    <div class="nav-item" onclick="navTo('technical',this)"><span class="nav-icon">📈</span>Technika</div>
+    <div class="nav-item" onclick="navTo('management',this)"><span class="nav-icon">👤</span>Zarząd</div>
+    <div class="nav-item" onclick="navTo('valuation',this)"><span class="nav-icon">🏷️</span>Wycena</div>
+
+    <div class="s-section">Ocena</div>
+    <div class="nav-item" onclick="navTo('probability',this)"><span class="nav-icon">🎲</span>Prawdopodobieństwo</div>
+    <div class="nav-item" onclick="navTo('scenarios',this)"><span class="nav-icon">🔮</span>Scenariusze</div>
+    <div class="nav-item" onclick="navTo('risks',this)"><span class="nav-icon">⚠️</span>Ryzyka</div>
+    <div class="nav-item" onclick="navTo('opportunities',this)"><span class="nav-icon">✨</span>Szanse</div>
+
+    <div class="s-section">Narzędzia</div>
+    <div class="nav-item" onclick="navTo('ai',this)"><span class="nav-icon">🤖</span>Analityk AI</div>
+    <div class="nav-item" onclick="navTo('history',this)"><span class="nav-icon">🕐</span>Historia</div>
+    <div class="nav-item" onclick="generatePDF()" style="margin-top:4px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue)"><span class="nav-icon">📄</span>Generuj PDF</div>
+
+    <div style="padding:8px">
+      <div class="s-section" style="padding:8px 4px 6px">Spółka</div>
+      <div class="s-ticker-box">
+        <div class="s-ticker-label">WPISZ DOWOLNY TICKER</div>
+        <input type="text" class="s-ticker-in" id="tickerIn" placeholder="np. NVDA, MSFT, AMZN..." maxlength="12"/>
+        <button class="btn-analyze" onclick="startAnalysis()">▶ Analizuj</button>
+        <div class="s-chips-label">POPULARNE</div>
+        <div class="s-chips">
+          <span class="s-chip" onclick="st('NVDA')">NVDA</span>
+          <span class="s-chip" onclick="st('MSFT')">MSFT</span>
+          <span class="s-chip" onclick="st('AAPL')">AAPL</span>
+          <span class="s-chip" onclick="st('GOOGL')">GOOGL</span>
+          <span class="s-chip" onclick="st('META')">META</span>
+          <span class="s-chip" onclick="st('AMZN')">AMZN</span>
+          <span class="s-chip" onclick="st('TSLA')">TSLA</span>
+          <span class="s-chip" onclick="st('CRM')">CRM</span>
+          <span class="s-chip" onclick="st('SNOW')">SNOW</span>
+          <span class="s-chip" onclick="st('PLTR')">PLTR</span>
+          <span class="s-chip" onclick="st('NET')">NET</span>
+          <span class="s-chip" onclick="st('SHOP')">SHOP</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-mini-scores" id="miniScoresWrap" style="display:none">
+      <div class="s-section" style="padding:4px 4px 6px">Oceny AI</div>
+      <div id="miniScores"></div>
+    </div>
+
+    <div class="s-footer">TECHNOLOGIA © 2025<br>Tylko do celów edukacyjnych</div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-left">
+        <span class="tb-ticker" id="tbTicker">—</span>
+        <span class="tb-company" id="tbCompany">Wybierz spółkę do analizy</span>
+        <span class="tb-badge" id="tbBadge" style="display:none"></span>
+      </div>
+      <div class="tb-right">
+        <div>
+          <div class="tb-score-label">Ocena ogólna</div>
+          <div class="tb-score-num" id="tbScore" style="color:var(--text3)">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KALKULATOR — stały, widoczny na wszystkich zakładkach -->
+    <div id="calcWrapper" style="display:none;padding:10px 20px 0;background:var(--bg);border-bottom:1px solid rgba(99,179,255,.06)">
+      <div class="calc-panel" id="profitCalc">
+        <div class="calc-panel-h"><span>🧮</span> Kalkulator zysku / straty <span style="font-size:10px;color:var(--text3);font-weight:400;margin-left:4px">— cena zakupu pobrana z analizy</span></div>
+        <div class="calc-grid">
+          <div class="calc-field">
+            <label class="calc-lbl">Kwota inwestycji ($)</label>
+            <input class="calc-inp" id="calcAmount" type="number" placeholder="np. 1000" oninput="runCalc()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-lbl">Cena zakupu ($)</label>
+            <input class="calc-inp prefilled" id="calcBuy" type="number" placeholder="np. 100.00" oninput="runCalc()">
+          </div>
+          <div class="calc-field">
+            <label class="calc-lbl">Cena docelowa — sprzedaż ($)</label>
+            <input class="calc-inp" id="calcTarget" type="number" placeholder="np. 150.00" oninput="runCalc()">
+          </div>
+        </div>
+        <div class="calc-field" style="margin-bottom:10px">
+          <label class="calc-lbl">Stop-Loss ($)</label>
+          <input class="calc-inp" id="calcStop" type="number" placeholder="np. 85.00 (opcjonalne)" oninput="runCalc()" style="max-width:220px">
+        </div>
+        <div class="calc-results" id="calcResults" style="display:none">
+          <div class="calc-res-card"><div class="calc-res-lbl">Liczba akcji</div><div class="calc-res-val" id="crShares" style="color:var(--cyan)">—</div><div class="calc-res-sub" id="crSharesSub"></div></div>
+          <div class="calc-res-card"><div class="calc-res-lbl">Potencjalny zysk</div><div class="calc-res-val" id="crProfit" style="color:var(--green)">—</div><div class="calc-res-sub" id="crProfitPct"></div></div>
+          <div class="calc-res-card" id="crLossCard"><div class="calc-res-lbl">Ryzyko straty</div><div class="calc-res-val" id="crLoss" style="color:var(--red)">—</div><div class="calc-res-sub" id="crLossPct"></div></div>
+          <div class="calc-res-card"><div class="calc-res-lbl">Risk / Reward</div><div class="calc-res-val" id="crRR" style="color:var(--amber)">—</div><div class="calc-res-sub" id="crRRSub"></div></div>
+        </div>
+        <div id="calcWarning" style="display:none;margin-top:8px;padding:8px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:7px;font-size:11px;color:var(--amber)"></div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- WELCOME -->
+      <div id="page-welcome" class="page active">
+        <div class="welcome">
+          <div class="welcome-icon">💻</div>
+          <h1 class="welcome-title">Analizator Spółek Technologicznych</h1>
+          <p class="welcome-sub">Narzędzie klasy hedge fund zbudowane pod specyfikę spółek tech — wzrost ARR, NRR, moat technologiczny, Rule of 40, ekspozycja AI/cloud/cyber.</p>
+          <div class="welcome-chips">
+            <span class="welcome-chip" onclick="quickStart('NVDA')">NVDA — Nvidia</span>
+            <span class="welcome-chip" onclick="quickStart('MSFT')">MSFT — Microsoft</span>
+            <span class="welcome-chip" onclick="quickStart('GOOGL')">GOOGL — Alphabet</span>
+            <span class="welcome-chip" onclick="quickStart('CRM')">CRM — Salesforce</span>
+            <span class="welcome-chip" onclick="quickStart('SNOW')">SNOW — Snowflake</span>
+            <span class="welcome-chip" onclick="quickStart('PLTR')">PLTR — Palantir</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- OVERVIEW -->
+      <div id="page-overview" class="page">
+        <!-- COMPANY DESCRIPTION -->
+        <div class="company-desc-box" id="companyDescBox">
+          <div class="company-desc-header">
+            <div class="company-desc-logo" id="companyLogo"></div>
+            <div>
+              <div class="company-desc-name" id="companyFullName"></div>
+              <div class="company-desc-sector" id="companySector"></div>
+            </div>
+          </div>
+          <div class="company-desc-text" id="companyDescText"></div>
+          <div class="company-desc-tags" id="companyTags"></div>
+        </div>
+        <div class="g4" id="ovMetrics"></div>
+        <div class="g2">
+          <div class="card"><div class="card-title">🎯 Oceny AI</div><div id="ovScores"></div></div>
+          <div class="card"><div class="card-title">🤖 Teza inwestycyjna</div><div class="ai-block" id="ovThesis"></div></div>
+        </div>
+        <div class="scen-grid" id="ovScenGrid"></div>
+        <div class="card"><div class="card-title">⚡ Mocne i słabe strony</div><div class="g2" id="ovSW"></div></div>
+      </div>
+
+      <!-- GROWTH & SAAS -->
+      <div id="page-growth" class="page">
+        <div class="sec-title">🚀 Wzrost, Metryki SaaS i Jakość Przychodów</div>
+        <div class="g4" id="growthMetrics"></div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">Rule of 40 — złoty standard spółek SaaS</div>
+          <div class="rule40-display" id="rule40Display"></div>
+        </div>
+
+        <div class="g2">
+          <div class="card">
+            <div class="card-title">Metryki SaaS / retencja</div>
+            <div id="saasMetrics"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Jakość i przewidywalność przychodów</div>
+            <div id="revenueQuality"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Lejek wzrostu ARR</div>
+          <div id="arrFunnel"></div>
+        </div>
+
+        <div class="card" style="margin-top:16px">
+          <div class="card-title">🤖 Ocena wzrostu AI</div>
+          <div class="ai-block" id="growthAI"></div>
+        </div>
+      </div>
+
+      <!-- MARGINS & FCF -->
+      <div id="page-margins" class="page">
+        <div class="sec-title">💰 Marże, Free Cash Flow i Efektywność</div>
+        <div class="g4" id="marginsMetrics"></div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Struktura marż</div><div id="marginsDetail"></div></div>
+          <div class="card"><div class="card-title">Free Cash Flow</div><div id="fcfDetail"></div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Efektywność sprzedaży</div><div id="salesEfficiency"></div></div>
+          <div class="card"><div class="card-title">Struktura kosztów</div><div id="costStructure"></div></div>
+        </div>
+        <div class="card"><div class="card-title">🤖 Ocena marż i FCF AI</div><div class="ai-block" id="marginsAI"></div></div>
+      </div>
+
+      <!-- MOAT -->
+      <div id="page-moat" class="page">
+        <div class="sec-title">🏰 Przewaga Konkurencyjna (Moat)</div>
+        <div class="g4" id="moatMetrics"></div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title">Mapa ciepła — siła przewag konkurencyjnych</div>
+          <div class="heatmap" id="moatHeatmap"></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Efekty sieciowe i switching costs</div><div id="networkEffects"></div></div>
+          <div class="card"><div class="card-title">Ekspozycja na megatrendy</div><div id="megatrends"></div></div>
+        </div>
+        <div class="card"><div class="card-title">🤖 Analiza moat AI</div><div class="ai-block" id="moatAI"></div></div>
+      </div>
+
+      <!-- TECHNICAL -->
+      <div id="page-technical" class="page">
+        <div class="sec-title">📈 Analiza Techniczna</div>
+        <div class="g4" id="techMetrics"></div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Wskaźniki trendu</div><div id="techTrend"></div></div>
+          <div class="card"><div class="card-title">Oscylatory i momentum</div><div id="techOsc"></div></div>
+        </div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Wsparcia i opory</div><div id="techSR"></div></div>
+          <div class="card"><div class="card-title">Siła względna i wolumen</div><div id="techRS"></div></div>
+        </div>
+        <div class="card"><div class="card-title">🤖 Ocena techniczna AI</div><div class="ai-block" id="techAI"></div></div>
+      </div>
+
+      <!-- MANAGEMENT -->
+      <div id="page-management" class="page">
+        <div class="sec-title">👤 Analiza Zarządu</div>
+        <div class="g4" id="mgmtMetrics"></div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Alokacja kapitału</div><div id="mgmtCapital"></div></div>
+          <div class="card"><div class="card-title">Rozcieńczanie akcjonariuszy</div><div id="mgmtDilution"></div></div>
+        </div>
+        <div class="card"><div class="card-title">🤖 Ocena zarządu AI</div><div class="ai-block" id="mgmtAI"></div></div>
+      </div>
+
+      <!-- VALUATION -->
+      <div id="page-valuation" class="page">
+        <div class="sec-title">🏷️ Wycena</div>
+        <div class="g4" id="valMetrics"></div>
+        <div class="g2">
+          <div class="card"><div class="card-title">Mnożniki wzrostowe (tech)</div><div id="valMultiples"></div></div>
+          <div class="card"><div class="card-title">Porównanie historyczne</div><div id="valHistorical"></div></div>
+        </div>
+        <div class="card"><div class="card-title">🤖 Ocena wyceny AI</div><div class="ai-block" id="valAI"></div></div>
+      </div>
+
+      <!-- PROBABILITY -->
+      <div id="page-probability" class="page">
+        <div class="sec-title">🎲 Silnik Prawdopodobieństwa AI</div>
+        <div class="g3" id="probScenMetrics" style="margin-bottom:16px"></div>
+        <div class="card" style="margin-bottom:16px"><div class="card-title">Ryzyka — rachunek prawdopodobieństwa</div><div id="probRisks"></div></div>
+        <div class="card"><div class="card-title">Szanse — rachunek prawdopodobieństwa</div><div id="probOpps"></div></div>
+      </div>
+
+      <!-- SCENARIOS -->
+      <div id="page-scenarios" class="page">
+        <div class="sec-title">🔮 Model Scenariuszy</div>
+        <div class="scen-grid" id="scenCards"></div>
+        <div class="card"><div class="card-title">🤖 Uzasadnienie modelu</div><div class="ai-block" id="scenRat"></div></div>
+      </div>
+
+      <!-- RISKS -->
+      <div id="page-risks" class="page">
+        <div class="sec-title">⚠️ Analiza Zagrożeń</div>
+        <div id="risksPage"></div>
+      </div>
+
+      <!-- OPPORTUNITIES -->
+      <div id="page-opportunities" class="page">
+        <div class="sec-title">✨ Analiza Szans</div>
+        <div id="oppsPage"></div>
+      </div>
+
+      <!-- AI ANALYST -->
+      <div id="page-ai" class="page">
+        <div class="sec-title">🤖 Analityk AI — Pełny Raport</div>
+        <div class="card" style="margin-bottom:16px"><div class="card-title">Teza inwestycyjna</div><div class="ai-block" id="aiThesis"></div></div>
+        <div class="g2" style="margin-bottom:16px">
+          <div class="card"><div class="card-title" style="color:var(--green)">✦ Przypadek byczego inwestora</div><div id="aiBull"></div></div>
+          <div class="card"><div class="card-title" style="color:var(--red)">▼ Przypadek niedźwiedziego inwestora</div><div id="aiBear"></div></div>
+        </div>
+        <div class="card"><div class="card-title">Podsumowanie ryzyk</div><div class="ai-block" id="aiRiskSum"></div></div>
+      </div>
+
+      <!-- HISTORY -->
+      <div id="page-history" class="page">
+        <div class="sec-title">🕐 Historia Analiz</div>
+        <div id="historyList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let D=null;
+
+function st(t){$('tickerIn').value=t}
+function quickStart(t){st(t);startAnalysis()}
+function quickSelect(t){ quickStart(t); }
+
+function navTo(name,el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=$('page-'+name);
+  if(pg)pg.classList.add('active');
+  if(name==='history')renderHistory();
+}
+
+function startAnalysis(){
+  const t=$('tickerIn').value.trim().toUpperCase();
+  if(!t){alert('Wpisz ticker spółki!');return;}
+  $('pTicker').textContent=t;
+  $('promptText').textContent=buildPrompt(t);
+  $('pasteArea').value='';
+  $('pasteOverlay').classList.add('show');
+}
+
+function closePaste(){$('pasteOverlay').classList.remove('show')}
+
+function copyPrompt(){
+  const txt=$('promptText').textContent;
+  navigator.clipboard.writeText(txt).catch(()=>{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t)});
+  event.target.textContent='✓ Skopiowano!';setTimeout(()=>{event.target.textContent='📋 Kopiuj prompt'},2500);
+}
+
+function pj(text){
+  let c=text.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  // Try direct parse first
+  try{return JSON.parse(c);}catch(e){}
+  // Try to find JSON object
+  const m=c.match(/\{[\s\S]*\}/);
+  if(m){try{return JSON.parse(m[0]);}catch(e){}}
+  // Try to auto-repair truncated JSON by closing open brackets
+  try{
+    let s=m?m[0]:c;
+    let opens=0,openArr=0;
+    for(let ch of s){if(ch==='{')opens++;else if(ch==='}')opens--;else if(ch==='[')openArr++;else if(ch===']')openArr--;}
+    // Close any open strings first - remove trailing incomplete string
+    s=s.replace(/,\s*"[^"]*$/,'').replace(/:\s*"[^"]*$/,':"—"');
+    // Close open arrays
+    while(openArr>0){s+=']';openArr--;}
+    // Close open objects
+    while(opens>0){s+='}';opens--;}
+    return JSON.parse(s);
+  }catch(e2){throw new Error('JSON niekompletny. Wróć do Claude i napisz: "dokończ JSON od miejsca gdzie skończyłeś". Błąd: '+e2.message);}
+}
+
+function parseAndRender(){
+  const raw=$('pasteArea').value.trim();
+  if(!raw){alert('Wklej odpowiedź Claude!');return;}
+  try{D=pj(raw);}catch(e){alert('Błąd parsowania JSON:\n'+e.message);return;}
+  closePaste();
+  render(D);
+  saveHist(D);
+}
+
+// ─── TOOLTIP DEFINITIONS ────────────────────────────────────
+const TOOLTIPS={
+  'ARR':{'title':'ARR — Annual Recurring Revenue','text':'Roczny przychód powtarzalny z aktywnych subskrypcji. Kluczowy wskaźnik dla spółek SaaS. Nie uwzględnia jednorazowych przychodów.','good':'Dobry wynik: Szybki wzrost YoY (30%+)','bad':'Ryzyko: Spowolnienie wzrostu lub churn'},
+  'NRR':{'title':'NRR — Net Revenue Retention','text':'Procent przychodów utrzymanych od istniejących klientów po roku, wliczając upsell i downsell. NRR>100% = klienci kupują więcej.','good':'Dobry: NRR > 120% (klienci organicznie rozwijają kontrakt)','bad':'Ryzyko: NRR < 100% = utrata przychodów bez nowych klientów'},
+  'Rule of 40':{'title':'Zasada 40 (Rule of 40)','text':'Złoty standard SaaS: wzrost przychodu % + marża FCF % powinny razem przekraczać 40. Balansuje wzrost z rentownością.','good':'Dobry: > 40 (świetna spółka SaaS)','bad':'Ryzyko: < 20 = spółka rośnie za wolno lub jest zbyt nierentowna'},
+  'Churn':{'title':'Churn Rate — Wskaźnik odejść','text':'Procent klientów lub przychodów utraconych w danym okresie. Niski churn = lojalna baza klientów i silny produkt.','good':'Dobry: < 5% rocznie (enterprise), < 10% (SMB)','bad':'Ryzyko: > 15% = poważny problem retencji'},
+  'P/E':{'title':'P/E — Cena do Zysku','text':'Ile razy inwestorzy płacą za 1 zł zysku. Wyższe P/E = oczekiwania wzrostu lub premium za jakość. Niskie P/E może oznaczać niedowartościowanie.','good':'Kontekst: Tech spółki tradycyjnie mają wyższe P/E','bad':'Ryzyko: Bardzo wysokie P/E wymaga potwierdzenia wzrostem'},
+  'EV/S':{'title':'EV/Revenue — Enterprise Value do Przychodów','text':'Wycena spółki podzielona przez roczne przychody. Standardowa miara dla szybko rosnących SaaS bez zysku netto.','good':'Dobry: < 10x dla dojrzałych, < 20x dla szybko rosnących','bad':'Ryzyko: > 30x wymaga ekstremalnego wzrostu do uzasadnienia'},
+  'EV/FCF':{'title':'EV/FCF — Enterprise Value do Free Cash Flow','text':'Ile płacisz za jednostkę wolnej gotówki generowanej przez spółkę. Lepsza miara wartości niż P/E dla spółek tech.','good':'Dobry: < 30x dla spółek z silnym wzrostem','bad':'Ryzyko: Spółki bez FCF wymagają ciągłego finansowania'},
+  'FCF Yield':{'title':'FCF Yield — Stopa FCF','text':'Free Cash Flow podzielony przez kapitalizację rynkową. Pokazuje realną "dochodowość" inwestycji w gotówce.','good':'Dobry: > 3% to solidna stopa dla tech spółki wzrostowej','bad':'Ryzyko: Ujemny FCF = spółka spala gotówkę'},
+  'Marża FCF':{'title':'Marża FCF — Free Cash Flow Margin','text':'Procent przychodów zamienianych w wolną gotówkę po CAPEX. Najważniejsza miara rentowności dla inwestorów długoterminowych.','good':'Dobry: > 20% to klasa światowa dla SaaS','bad':'Ryzyko: Ujemna marża FCF = bez zewnętrznego finansowania spółka traci płynność'},
+  'Marża brutto':{'title':'Marża Brutto (Gross Margin)','text':'Procent przychodu pozostający po kosztach bezpośrednich (COGS). Dla SaaS powinna być wysoka bo koszty dystrybucji software są minimalne.','good':'Dobry: > 70% dla SaaS, > 60% dla hardware/mixed','bad':'Ryzyko: Spadająca marża brutto = rosnące koszty infrastruktury lub presja cenowa'},
+  'Marża op.':{'title':'Marża Operacyjna (EBIT Margin)','text':'Zysk operacyjny jako procent przychodów. Uwzględnia wszystkie koszty oprócz odsetek i podatków. Miara efektywności operacyjnej.','good':'Dobry: Rosnący trend ważniejszy niż wartość absolutna','bad':'Ryzyko: Głęboko ujemna przy spowolnieniu wzrostu = pułapka'},
+  'RSI':{'title':'RSI — Relative Strength Index','text':'Oscylator momentum (0-100). Mierzy siłę i szybkość ruchów cenowych. Sygnalizuje wykupienie lub wyprzedanie akcji.','good':'Kupno: RSI < 30 = technicznie oversold (wyprzedana)','bad':'Ostrożność: RSI > 70 = technicznie overbought (wykupiona)'},
+  'Beta':{'title':'Beta — Współczynnik Ryzyka Rynkowego','text':'Mierzy zmienność akcji względem indeksu (S&P 500). Beta = 1 oznacza ruch identyczny z rynkiem.','good':'Beta < 1 = mniej ryzykowna niż rynek','bad':'Beta > 2 = bardzo zmienne, amplifikuje ruchy rynku'},
+  'Short Interest':{'title':'Short Interest — Krótka Sprzedaż','text':'Procent akcji sprzedanych "na krótko". Wysokie SI może sygnalizować negatywny sentyment, ale też potencjał short squeeze.','good':'Niskie SI (< 5%) = brak masowego zakładu przeciwko spółce','bad':'Wysokie SI (> 20%) = rynek obstawia dalszy spadek'},
+  'Insider Buying':{'title':'Transakcje Insiderów','text':'Zakupy lub sprzedaże akcji przez prezesów, dyrektorów i głównych akcjonariuszy. Insiderzy mają najlepszą wiedzę o kondycji spółki.','good':'Insider buying = zarząd wierzy w wzrost wartości','bad':'Masowy insider selling = możliwy sygnał ostrzegawczy'},
+  'CAC':{'title':'CAC — Customer Acquisition Cost','text':'Koszt pozyskania jednego nowego klienta (marketing + sprzedaż). W zestawieniu z LTV pokazuje efektywność modelu biznesowego.','good':'Dobry: LTV/CAC > 3x (klient warty 3x więcej niż kosztuje pozyskanie)','bad':'Ryzyko: Rosnący CAC przy stałym LTV = erozja ekonomiki'},
+  'LTV':{'title':'LTV — Customer Lifetime Value','text':'Całkowita wartość przychodów od jednego klienta przez cały okres współpracy. LTV/CAC > 3x to standard dla zdrowego SaaS.','good':'Dobry: Wysoki LTV przy niskim churn = silny product-market fit','bad':'Ryzyko: Krótki cykl życia klienta = słaby moat'},
+  'Magic Number':{'title':'Magic Number — Efektywność Wzrostu','text':'Mierzy ile nowego ARR generuje każdy dolar wydany na sprzedaż i marketing. Magic Number > 1 = efektywny wzrost.','good':'Dobry: > 0.75 (solidny), > 1.0 (doskonały)','bad':'Ryzyko: < 0.5 = wzrost jest zbyt kosztowny'},
+  'Burn Rate':{'title':'Burn Rate — Tempo Spalania Gotówki','text':'Miesięczny ubytek gotówki (dla spółek pre-zysk). W zestawieniu z cash runway pokazuje ile czasu do kolejnej rundy finansowania.','good':'Dobry: Runway > 24 miesiące bez nowego finansowania','bad':'Ryzyko: Runway < 12 miesięcy = presja na pozyskanie kapitału'},
+  'DBNRR':{'title':'DBNRR — Dollar-Based Net Revenue Retention','text':'Identyczne z NRR — procent przychodów utrzymanych od istniejącej bazy klientów. Używane zamiennie z NRR.','good':'Dobry: > 120% = organiczny wzrost bez nowych klientów','bad':'Ryzyko: < 100% = istniejący klienci generują mniej niż rok temu'},
+  'LTV/CAC':{'title':'LTV/CAC — Zwrot z pozyskania klienta','text':'Stosunek wartości życiowej klienta (LTV) do kosztu jego pozyskania (CAC). Pokazuje ile razy więcej zarabiasz na kliencie niż wydajesz na jego pozyskanie.','good':'Dobry: > 3x (klient warty 3x więcej niż kosztuje pozyskanie)','bad':'Ryzyko: < 1.5x = model biznesowy traci pieniądze na każdym kliencie'},
+  'Retencja':{'title':'Retencja klientów','text':'Procent klientów którzy zostają z firmą po roku. Wysoka retencja = silny product-market fit i niski churn.','good':'Dobry: > 90% rocznie dla enterprise SaaS','bad':'Ryzyko: < 80% = produkt nie dostarcza wystarczającej wartości'},
+  'Marża netto':{'title':'Marża netto (Net Margin)','text':'Procent przychodów pozostający jako zysk netto po wszystkich kosztach, podatkach i odsetkach. Ostateczna miara rentowności.','good':'Dobry: > 15% dla dojrzałej spółki tech','bad':'Ryzyko: Ujemna marża netto bez ścieżki do rentowności'},
+  'Trend marż':{'title':'Trend marż','text':'Kierunek zmian marż przez ostatnie 4-8 kwartałów. Rosnące marże = lepsza efektywność operacyjna i/lub pricing power.','good':'Rosnący trend = spółka skaluje się efektywnie','bad':'Malejący trend = presja kosztowa lub konkurencyjna'},
+  'Momentum':{'title':'Momentum cenowe','text':'Siła i kierunek ruchu cenowego w ostatnim okresie. Silne momentum może sygnalizować zmianę trendu lub kontynuację.','good':'Pozytywne momentum = kupujący dominują nad sprzedającymi','bad':'Negatywne momentum = sprzedający dominują, ostrożność'},
+  'Złoty krzyż':{'title':'Złoty Krzyż (Golden Cross)','text':'Sygnał techniczny gdy MA50 (średnia 50-dniowa) przecina MA200 (średnią 200-dniową) od dołu. Jeden z silniejszych sygnałów kupna w analizie technicznej.','good':'TAK = długoterminowy sygnał wzrostowy, rynek w trendzie bull','bad':'NIE = brak potwierdzenia trendu wzrostowego'},
+  'Insider ownership':{'title':'Insider Ownership — Własność Zarządu','text':'Procent akcji spółki posiadany przez CEO, dyrektorów i głównych akcjonariuszy. Im wyższy tym bardziej zarząd jest zmotywowany do tworzenia wartości.','good':'Dobry: > 5% dla large-cap, > 15% dla mid-cap','bad':'Ryzyko: 0% insider ownership = zarząd nie ma skóry w grze'},
+  'SBC':{'title':'SBC — Stock-Based Compensation','text':'Wynagrodzenia w formie akcji. Rozcieńcza udziały istniejących akcjonariuszy. Wysoki SBC zmniejsza realny FCF na akcję.','good':'Akceptowalny: < 10% przychodów dla spółek wzrostowych','bad':'Ryzyko: > 20% przychodów = masowe rozcieńczanie akcjonariuszy'},
+  'Siła wzgl.':{'title':'Siła względna (Relative Strength)','text':'Porównanie wyników spółki do benchmarku (NASDAQ lub sektor). RS > 0 = spółka bije indeks.','good':'Dobry: outperformance indeksu przez 3+ miesiące','bad':'Ryzyko: trwały underperformance = słabsza spółka niż rynek'},
+  'Wolumen':{'title':'Wolumen obrotów','text':'Liczba akcji wymieniana w danym dniu. Wysoki wolumen potwierdza siłę ruchu cenowego. Niski wolumen = słabe przekonanie rynku.','good':'Wolumen 2x+ przy wzroście = silny sygnał kupna','bad':'Wzrost na niskim wolumenie = słabe przekonanie, potencjalna pułapka'},
+  'Switching costs':{'title':'Switching Costs — Koszty Przejścia','text':'Jak trudno i kosztownie jest dla klienta przejść do konkurencji. Wysokie switching costs = naturalny moat i stabilna baza klientów.','good':'Wysokie: dane, integracje API, szkolenia, przeprojektowanie workflow','bad':'Niskie: łatwa migracja = klient może odejść przy lepszej ofercie konkurencji'},
+  'Efekty sieciowe':{'title':'Efekty Sieciowe (Network Effects)','text':'Wartość produktu rośnie wraz z liczbą użytkowników. Każdy nowy użytkownik czyni produkt lepszym dla wszystkich.','good':'Silne: platformy, marketplace, dane AI – trudno obalić','bad':'Brak: każdy klient jest niezależny – łatwiej skopiować'},
+  'Ekspozycja AI':{'title':'Ekspozycja na AI','text':'Procent przychodów lub wartości biznesu powiązany z trendem AI. Wyższy = większy tailwind ze strony rosnących inwestycji w AI.','good':'> 60%: bezpośredni beneficjent boomu AI','bad':'< 20%: ograniczona ekspozycja na najważniejszy megatrend'},
+  'Buyback':{'title':'Program Buybacków','text':'Spółka skupuje własne akcje z rynku, redukując ich liczbę w obiegu. Zwiększa EPS i sygnalizuje że zarząd uważa akcje za niedowartościowane.','good':'Aktywny buyback = mechaniczny support ceny i wzrost EPS','bad':'Brak buybacków przy dużej gotówce = nieefektywna alokacja kapitału'},
+  'Guidance':{'title':'Guidance — Prognozy Zarządu','text':'Oficjalne prognozy przychodów i zysku na kolejny kwartał/rok wydawane przez zarząd. Regularny beat guidance = silny sygnał jakości zarządzania.','good':'Konsekwentny beat: zarząd daje konserwatywne prognozy i je bije','bad':'Guidance miss: zarząd przeszacowuje możliwości lub traci kontrolę'},
+  'P/S':{'title':'P/S — Cena do Przychodów','text':'Kapitalizacja rynkowa podzielona przez roczne przychody. Używana gdy spółka nie ma zysku. Im niższy tym taniej.','good':'Dobry: < 5x dla dojrzałych, < 15x dla high-growth','bad':'Ryzyko: P/S > 30x wymaga wyjątkowego wzrostu'},
+  'Ocena wzrostu':{'title':'Ocena Wzrostu AI (0-100)','text':'Kompleksowa ocena jakości i tempa wzrostu: ARR, NRR, expansion revenue, nowi klienci, rynki geograficzne, product-led growth.','good':'> 70 = silny, zrównoważony wzrost','bad':'< 40 = wzrost spowalnia lub jest niskiej jakości'},
+  'Ocena marż':{'title':'Ocena Marż AI (0-100)','text':'Ocena rentowności: marża brutto, FCF, EBITDA, trend efektywności operacyjnej i path to profitability.','good':'> 70 = zdrowe marże lub wyraźna ścieżka do rentowności','bad':'< 40 = niskie marże bez widocznej poprawy'},
+  'Ocena moat':{'title':'Ocena Moat AI (0-100)','text':'Siła przewagi konkurencyjnej: switching costs, efekty sieciowe, własność danych, IP, dominacja rynkowa, bariery wejścia.','good':'> 70 = silny moat, trudny do podważenia','bad':'< 40 = słaba przewaga, podatna na konkurencję'},
+  'Ocena zarządu':{'title':'Ocena Zarządu AI (0-100)','text':'Jakość zarządzania: track record CEO, alokacja kapitału, insider ownership, przejrzystość komunikacji, strategia.','good':'> 70 = wyjątkowy zarząd z historią tworzenia wartości','bad':'< 40 = słaby track record lub problemy z governance'},
+  'Ryzyko hype':{'title':'Ryzyko Hype (0-100)','text':'Ocena ryzyka nadmiernej spekulacji i oderwania wyceny od fundamentów. Im WYŻSZY tym GORSZY — 100 = maksymalne ryzyko bańki.','good':'< 30 = wycena umiarkowana, uzasadniona fundamentami','bad':'> 70 = wycena silnie spekulatywna, podatna na korektę'},
+};
+
+function tt(label, key){
+  const d=TOOLTIPS[key]||TOOLTIPS[label]||null;
+  if(!d)return`<span>${label}</span>`;
+  const safeKey=key.replace(/[^a-zA-Z0-9]/g,'_');
+  return`<span class="tt" data-tt="${safeKey}" data-tt-key="${key}">${label}<i class="tt-icon" aria-hidden="true">?</i></span>`;
+}
+
+// Global tooltip handler
+document.addEventListener('DOMContentLoaded',()=>{
+  const ttEl=document.getElementById('tt-global');
+  const ttTitle=document.getElementById('tt-title');
+  const ttText=document.getElementById('tt-text');
+  const ttGood=document.getElementById('tt-good');
+  const ttBad=document.getElementById('tt-bad');
+
+  document.body.addEventListener('mouseover',e=>{
+    const el=e.target.closest('.tt');
+    if(!el)return;
+    const key=el.dataset.ttKey||el.dataset.tt?.replace(/_/g,' ');
+    const d=TOOLTIPS[key]||null;
+    if(!d){return;}
+    ttTitle.textContent=d.title||key;
+    ttText.textContent=d.text||'';
+    if(d.good){ttGood.textContent='✓ '+d.good;ttGood.style.display='block';}else{ttGood.style.display='none';}
+    if(d.bad){ttBad.textContent='✗ '+d.bad;ttBad.style.display='block';}else{ttBad.style.display='none';}
+    ttEl.classList.add('show');
+    positionTt(e);
+  });
+
+  document.body.addEventListener('mousemove',e=>{
+    if(ttEl.classList.contains('show'))positionTt(e);
+  });
+
+  document.body.addEventListener('mouseout',e=>{
+    const el=e.target.closest('.tt');
+    if(el)ttEl.classList.remove('show');
+  });
+
+  function positionTt(e){
+    const x=e.clientX,y=e.clientY;
+    const w=ttEl.offsetWidth||260,h=ttEl.offsetHeight||120;
+    const vw=window.innerWidth,vh=window.innerHeight;
+    let left=x+14,top=y-h-10;
+    if(left+w>vw-10)left=x-w-14;
+    if(top<10)top=y+20;
+    if(top+h>vh-10)top=vh-h-10;
+    ttEl.style.left=left+'px';
+    ttEl.style.top=top+'px';
+  }
+});
+
+// ─── HELPERS ────────────────────────────────────────────────
+function sc(n){return n>=70?'var(--green)':n>=50?'var(--amber)':'var(--red)'}
+function scc(n){return n>=70?'c-g':n>=50?'c-a':'c-r'}
+function tc(v){if(!v)return'';const l=v.toLowerCase();if(l.includes('wzrost')||l.includes('rosnący')||l.includes('bull')||l.includes('powyż'))return'c-g';if(l.includes('spad')||l.includes('bear')||l.includes('poniż')||l.includes('malejący'))return'c-r';return'c-a';}
+function irow(label,val,cls,ttKey){return`<div class="irow"><span class="irow-label">${ttKey?tt(label,ttKey):label}</span><span class="irow-val ${cls||''}">${val||'—'}</span></div>`}
+function swi(txt,col){return`<div class="sw-item"><div class="sw-dot" style="background:${col}"></div><span>${txt}</span></div>`}
+
+function mc(label,val,cls,sub,barPct,ttKey){
+  const lbl=ttKey?tt(label,ttKey):label;
+  return`<div class="mc"><div class="mc-label">${lbl}</div><div class="mc-val ${cls||''}">${val||'—'}</div>${sub?`<div class="mc-sub">${sub}</div>`:''}${barPct!==undefined?`<div class="mc-bar"><div class="mc-fill" style="width:${barPct}%;background:${cls==='c-g'?'var(--green)':cls==='c-a'?'var(--amber)':cls==='c-r'?'var(--red)':cls==='c-b'?'var(--blue)':'var(--cyan)'}"></div></div>`:''}</div>`
+}
+
+function ringScore(val,label,sub,ttKey){
+  const col=sc(val);const r=20;const circ=2*Math.PI*r;const dash=circ*(val/100);
+  const lbl=ttKey?tt(label,ttKey):label;
+  return`<div class="ring-wrap"><div class="ring"><svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="${r}" fill="none" stroke="var(--bg5)" stroke-width="4"/><circle cx="26" cy="26" r="${r}" fill="none" stroke="${col}" stroke-width="4" stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/></svg><div class="ring-num" style="color:${col}">${val}</div></div><div class="ring-info"><div class="ring-label">${lbl}</div><div class="ring-sub">${sub||''}</div></div></div>`
+}
+
+function probItem(item,isRisk){
+  const p=item.prawdopodobieństwo||0;
+  const lvl=item.poziom||'';
+  const bc=isRisk?(p>=60?'var(--red)':p>=35?'var(--amber)':'var(--green)'):(p>=60?'var(--green)':p>=35?'var(--amber)':'var(--red)');
+  const lc=lvl.toLowerCase().includes('wysoki')?'tag r':lvl.toLowerCase().includes('niski')?'tag g':'tag a';
+  return`<div class="prob-item">
+    <div class="prob-head"><div class="prob-pct" style="color:${bc}">${p}%</div><div class="prob-name">${item.nazwa||''}</div><span class="${lc}">${lvl}</span></div>
+    <div class="prob-bar-wrap"><div class="prob-bar" style="width:${p}%;background:${bc}"></div></div>
+    <div class="prob-details">
+      <div class="pd"><div class="pd-label">Kurs</div><div class="pd-val" style="color:${isRisk?'var(--red)':'var(--green)'}">${item.wpływNaKurs||'—'}</div></div>
+      <div class="pd"><div class="pd-label">Przychód</div><div class="pd-val">${item.wpływNaPrzychód||'—'}</div></div>
+      <div class="pd"><div class="pd-label">ARR/NRR</div><div class="pd-val">${item.wpływNaARR||'—'}</div></div>
+      <div class="pd"><div class="pd-label">Horyzont</div><div class="pd-val" style="color:var(--blue)">${item.horyzont||'—'}</div></div>
+    </div>${item.opis?`<div style="font-size:11px;color:var(--text3);margin-top:6px">${item.opis}</div>`:''}
+  </div>`
+}
+
+function heatCell(label,val,flip){
+  const v=val||0;
+  const high=flip?(v>60):(v>60);
+  const bg=v>=70?'rgba(59,130,246,.15)':v>=50?'rgba(139,92,246,.12)':'rgba(34,197,94,.1)';
+  const c=v>=70?'var(--blue)':v>=50?'var(--purple)':'var(--green)';
+  return`<div class="heat-cell" style="background:${bg}"><div class="heat-label" style="color:${c};font-family:var(--mono);font-size:9px;letter-spacing:1px">${label}</div><div class="heat-val" style="color:${c}">${v}%</div><div class="heat-sub" style="color:${c}80;font-size:10px">${v>=70?'Silna':v>=50?'Średnia':'Słaba'}</div></div>`
+}
+
+// ─── MAIN RENDER ────────────────────────────────────────────
+function render(D){
+  const oc=D.ocenyAI||{};
+  const kd=D.kluczoweDane||{};
+  const g=D.wzrost||{};
+  const m=D.marże||{};
+  const mo=D.moat||{};
+  const t=D.technika||{};
+  const z=D.zarząd||{};
+  const w=D.wycena||{};
+  const s=D.scenariusze||{};
+  const ta=D.tezyAI||{};
+
+  // TOPBAR
+  $('tbTicker').textContent=D.ticker||'';
+  $('tbCompany').textContent=D.nazwaSpółki||'';
+  $('tbBadge').textContent=D.podsektor||'';
+  $('tbBadge').style.display='inline-block';
+  const os=oc.ocenaOgólna||0;
+  $('tbScore').textContent=os;$('tbScore').style.color=sc(os);
+
+  // KALKULATOR — pokaż i wypełnij ceną
+  const currentPrice=parseFloat(D.kluczoweDane?.aktualnaCena||D.kluczoweDane?.cenaAkcji||0);
+  initCalc(currentPrice);
+
+  // COMPANY DESCRIPTION BOX
+  const desc=D.opisSpółki||D.opis||D.companyDescription||'';
+  const descBox=$('companyDescBox');
+  if(desc&&descBox){
+    descBox.style.display='block';
+    const logo=$('companyLogo');if(logo)logo.textContent=(D.ticker||'?').slice(0,4);
+    const nm=$('companyFullName');if(nm)nm.textContent=D.nazwaSpółki||D.ticker||'';
+    const sec=$('companySector');if(sec)sec.textContent=(D.sektor||'')+(D.podsektor?' · '+D.podsektor:'');
+    const dt=$('companyDescText');if(dt)dt.textContent=desc;
+    const tg=$('companyTags');
+    if(tg){
+      const tags=[D.giełda,D.kraj,D.modelBiznesowy,D.segmentRynku].filter(Boolean);
+      tg.innerHTML=tags.map(t=>`<span class="tag b">${t}</span>`).join('');
+    }
+  }else if(descBox){descBox.style.display='none';}
+
+  // MINI SCORES SIDEBAR
+  $('miniScoresWrap').style.display='block';
+  const miniData=[
+    ['Wzrost',oc.ocenaWzrostu],['Marże',oc.ocenaMarż],['Moat',oc.ocenaMoat],
+    ['Technika',oc.ocenaTechniczna],['Zarząd',oc.ocenaZarządu],['Wycena',oc.ocenaWyceny,true],
+    ['Hype risk',oc.ryzykoHype,true]
+  ];
+  $('miniScores').innerHTML=miniData.map(([l,v,inv])=>{
+    const val=v||0;const c=inv?(val<40?'var(--green)':val<70?'var(--amber)':'var(--red)'):(val>=70?'var(--green)':val>=50?'var(--amber)':'var(--red)');
+    const ttMap={'Wzrost':'Ocena wzrostu','Marże':'Ocena marż','Moat':'Ocena moat','Zarząd':'Ocena zarządu','Hype risk':'Ryzyko hype'};
+    return`<div class="mini-row"><span class="mini-lbl">${ttMap[l]?tt(l,ttMap[l]):l}</span><span class="mini-val" style="color:${c}">${val}</span></div>`;
+  }).join('');
+
+  // ── OVERVIEW ────────────────────────────────────────────
+  $('ovMetrics').innerHTML=
+    mc('Przychód / ARR',kd.przychodARR,'c-b',kd.wzrostPrzychodu,undefined,'ARR')+
+    mc('Wzrost YoY',kd.wzrostPrzychodu,kd.wzrostPrzychodu?.startsWith('+')?'c-g':'c-r',undefined,undefined,'Ocena wzrostu')+
+    mc('Rule of 40',kd.ruleOf40,parseInt(kd.ruleOf40)>=40?'c-g':parseInt(kd.ruleOf40)>=25?'c-a':'c-r','wzrost + marża FCF',undefined,'Rule of 40')+
+    mc('NRR',kd.NRR,parseInt(kd.NRR)>=120?'c-g':parseInt(kd.NRR)>=100?'c-a':'c-r','retencja przychodów',undefined,'NRR');
+
+  $('ovScores').innerHTML=
+    ringScore(oc.ocenaWzrostu||0,'Wzrost','Jakość wzrostu','Ocena wzrostu')+
+    ringScore(oc.ocenaMarż||0,'Marże','FCF & profitability','Ocena marż')+
+    ringScore(oc.ocenaMoat||0,'Moat','Przewaga konk.','Ocena moat')+
+    ringScore(oc.ocenaZarządu||0,'Zarząd','Quality mgmt','Ocena zarządu');
+
+  $('ovThesis').innerHTML=`<div class="ai-header">🤖 TEZA INWESTYCYJNA</div><div class="ai-text">${ta.tezaInwestycyjna||''}</div>`;
+
+  const sb=s.byczy||{},sn=s.neutralny||{},sbr=s.niedźwiedzi||{};
+  const tot=(sb.prawdopodobieństwo||0)+(sn.prawdopodobieństwo||0)+(sbr.prawdopodobieństwo||0)||100;
+  const pb=Math.round((sb.prawdopodobieństwo||0)/tot*100),pn=Math.round((sn.prawdopodobieństwo||0)/tot*100),pbr=100-pb-pn;
+  $('ovScenGrid').innerHTML=`
+    <div class="scen-card bull"><div class="scen-lbl">▲ Byczy</div><div class="scen-prob" style="color:var(--green)">${pb}%</div><div class="scen-range">${sb.zakres||''}</div></div>
+    <div class="scen-card neu"><div class="scen-lbl">◆ Neutralny</div><div class="scen-prob" style="color:var(--blue)">${pn}%</div><div class="scen-range">${sn.zakres||''}</div></div>
+    <div class="scen-card bear"><div class="scen-lbl">▼ Niedźwiedzi</div><div class="scen-prob" style="color:var(--red)">${pbr}%</div><div class="scen-range">${sbr.zakres||''}</div></div>`;
+
+  $('ovSW').innerHTML=`
+    <div><div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--green);margin-bottom:8px">✦ MOCNE STRONY</div>${(ta.mocneStrony||[]).map(x=>swi(x,'var(--green)')).join('')}</div>
+    <div><div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--red);margin-bottom:8px">⚠ SŁABE STRONY</div>${(ta.słabeStrony||[]).map(x=>swi(x,'var(--red)')).join('')}</div>`;
+
+  // ── GROWTH & SAAS ────────────────────────────────────────
+  $('growthMetrics').innerHTML=
+    mc('ARR / Przychód',kd.przychodARR,'c-b',undefined,undefined,'ARR')+
+    mc('Wzrost YoY',kd.wzrostPrzychodu,kd.wzrostPrzychodu?.startsWith('+')?'c-g':'c-r',undefined,undefined,'Ocena wzrostu')+
+    mc('NRR',kd.NRR,parseInt(kd.NRR)>=120?'c-g':parseInt(kd.NRR)>=100?'c-a':'c-r',undefined,undefined,'NRR')+
+    mc('Churn rate',g.churnRate,parseFloat(g.churnRate)<5?'c-g':parseFloat(g.churnRate)<10?'c-a':'c-r',undefined,undefined,'Churn');
+
+  const r40=parseInt(kd.ruleOf40)||0;
+  const wzrostNum=parseInt(kd.wzrostPrzychodu)||0;
+  const fcfMarNum=parseInt(m.marżaFCF)||0;
+  $('rule40Display').innerHTML=`
+    <div class="rule40-part"><div class="rule40-part-num" style="color:var(--blue)">${wzrostNum}%</div><div class="rule40-part-lbl">Wzrost przychodu</div></div>
+    <div class="rule40-eq">+</div>
+    <div class="rule40-part"><div class="rule40-part-num" style="color:var(--cyan)">${fcfMarNum}%</div><div class="rule40-part-lbl">Marża FCF</div></div>
+    <div class="rule40-eq">=</div>
+    <div class="rule40-part"><div class="rule40-num" style="color:${r40>=40?'var(--green)':r40>=25?'var(--amber)':'var(--red)'}">${r40}</div><div class="rule40-label" style="margin-top:4px">Rule of 40</div><div style="font-size:11px;color:var(--text3);margin-top:2px">${r40>=40?'✓ Zdrowe':'⚠ Poniżej progu'}</div></div>`;
+
+  $('saasMetrics').innerHTML=
+    irow('NRR (Net Revenue Retention)',g.NRR||kd.NRR,parseInt(g.NRR||kd.NRR||0)>=120?'c-g':parseInt(g.NRR||kd.NRR||0)>=100?'c-a':'c-r','NRR')+
+    irow('Churn rate',g.churnRate,parseFloat(g.churnRate)<5?'c-g':parseFloat(g.churnRate)<10?'c-a':'c-r','Churn')+
+    irow('LTV/CAC',g.LTVCAC,parseFloat(g.LTVCAC)>=3?'c-g':parseFloat(g.LTVCAC)>=1.5?'c-a':'c-r','LTV/CAC')+
+    irow('Okres zwrotu CAC',g.cacPayback,'c-a')+
+    irow('Retencja klientów',g.retencjaKlientów,'c-g','Retencja');
+    irow('Churn rate',g.churnRate,parseFloat(g.churnRate)<5?'c-g':'c-a')+
+    irow('LTV/CAC',g.LTVCAC,parseFloat(g.LTVCAC)>=3?'c-g':'c-a')+
+    irow('Okres zwrotu CAC',g.cacPayback,'c-a')+
+    irow('Retencja klientów',g.retencjaKlientów,tc(g.retencjaKlientów));
+
+  $('revenueQuality').innerHTML=
+    irow('Udział przychodów cyklicznych',g.przychodyCykliczne,'c-g')+
+    irow('Udział przychodów jednorazowych',g.przychodyCzęściowe||g.przychodyJednorazowe,'c-a')+
+    irow('Widoczność przychodów',g.widocznośćPrzychodów,'c-b')+
+    irow('CAGR 3-letni',g.CAGR3,'c-g')+
+    irow('Wzrost nowych klientów',g.wzrostKlientów,tc(g.wzrostKlientów));
+
+  $('arrFunnel').innerHTML=[
+    ['ARR / Przychód', kd.przychodARR, 100],
+    ['Przychody cykliczne (netto)', g.przychodyCykliczne, 85],
+    ['Gross profit', `${m.marżaBrutto||'—'}`, 70],
+    ['FCF', `${m.marżaFCF||'—'}`, 55],
+  ].map(([l,v,w])=>`<div class="funnel-row"><div class="funnel-label">${l}</div><div class="funnel-bar-col"><div class="funnel-bar-fill" style="width:${w}%"></div></div><div class="funnel-val c-b">${v||'—'}</div></div>`).join('');
+
+  $('growthAI').innerHTML=`<div class="ai-header">🤖 ANALIZA WZROSTU</div><div class="ai-text">${g.komentarzWzrost||''}</div>`;
+
+  // ── MARGINS & FCF ────────────────────────────────────────
+  $('marginsMetrics').innerHTML=
+    mc('Marża brutto',m.marżaBrutto,'c-g','gross profit margin',undefined,'Marża brutto')+
+    mc('Marża operacyjna',m.marżaOperacyjna,parseFloat(m.marżaOperacyjna)>=20?'c-g':parseFloat(m.marżaOperacyjna)>=0?'c-a':'c-r',undefined,undefined,'Marża op.')+
+    mc('Marża netto',m.marżaNetto,parseFloat(m.marżaNetto)>=15?'c-g':parseFloat(m.marżaNetto)>=0?'c-a':'c-r',undefined,undefined,'Marża netto')+
+    mc('Marża FCF',m.marżaFCF,parseFloat(m.marżaFCF)>=20?'c-g':parseFloat(m.marżaFCF)>=0?'c-a':'c-r',undefined,undefined,'Marża FCF');
+
+  $('marginsDetail').innerHTML=
+    irow('Marża brutto',m.marżaBrutto,'c-g','Marża brutto')+irow('Marża operacyjna',m.marżaOperacyjna,'c-g','Marża op.')+
+    irow('Marża netto',m.marżaNetto,'c-g','Marża netto')+irow('Marża FCF',m.marżaFCF,'c-g','Marża FCF')+
+    irow('Trend marż',m.trendMarż,tc(m.trendMarż),'Trend marż');
+
+  $('fcfDetail').innerHTML=
+    irow('Free Cash Flow',m.FCFwartosc,'c-b')+irow('FCF/Akcję',m.FCFnaAkcję,'c-b')+
+    irow('FCF Yield',m.FCFyield,'c-a','FCF Yield')+irow('Jakość FCF',m.jakośćFCF,'c-g')+
+    irow('CAPEX intensity',m.CAPEXintensity,'c-a');
+
+  $('salesEfficiency').innerHTML=
+    irow('Koszt pozyskania klienta (CAC)',g.CAC,'c-a','CAC')+irow('Magic number',m.magicNumber,parseFloat(m.magicNumber)>=0.75?'c-g':'c-a','Magic Number')+
+    irow('Efektywność S&M',m.efektywnośćSM,'c-a')+irow('Przychód na pracownika',m.przychodNaPracownika,'c-b');
+
+  $('costStructure').innerHTML=
+    irow('R&D / Przychód',m.RDratio,'c-p')+irow('S&M / Przychód',m.SMratio,'c-a')+
+    irow('G&A / Przychód',m.GAratio,'c-b')+irow('Stock-based compensation',m.SBC,'c-a');
+
+  $('marginsAI').innerHTML=`<div class="ai-header">🤖 ANALIZA MARŻ</div><div class="ai-text">${m.komentarzMarże||''}</div>`;
+
+  // ── MOAT ────────────────────────────────────────────────
+  $('moatMetrics').innerHTML=
+    mc('Siła moat',mo.siłaMoat||'—','c-b')+
+    mc('Efekty sieciowe',`${mo.efektySieciowe||0}%`,parseInt(mo.efektySieciowe)>=70?'c-g':'c-a')+
+    mc('Switching costs',`${mo.switchingCosts||0}%`,parseInt(mo.switchingCosts)>=70?'c-g':'c-a')+
+    mc('Ekspozycja AI',`${mo.ekspozycjaAI||0}%`,'c-p');
+
+  $('moatHeatmap').innerHTML=
+    heatCell('Efekty sieciowe',mo.efektySieciowe)+heatCell('Switching costs',mo.switchingCosts)+
+    heatCell('Dane / IP',mo.daneIP)+heatCell('Skala',mo.skala)+
+    heatCell('Ekosystem',mo.ekosystem)+heatCell('Pricing power',mo.pricingPower)+
+    heatCell('Exp. AI',mo.ekspozycjaAI)+heatCell('Exp. Cloud',mo.ekspozycjaCloud);
+
+  $('networkEffects').innerHTML=
+    irow('Efekty sieciowe',`${mo.efektySieciowe||0}%`,parseInt(mo.efektySieciowe)>=70?'c-g':'c-a','Efekty sieciowe')+
+    irow('Switching costs',`${mo.switchingCosts||0}%`,parseInt(mo.switchingCosts)>=70?'c-g':'c-a','Switching costs')+
+    irow('Pricing power',`${mo.pricingPower||0}%`,parseInt(mo.pricingPower)>=70?'c-g':'c-a')+
+    irow('Zależność od hype\'u',mo.zależnośćHype||'—','c-a');
+
+  $('megatrends').innerHTML=
+    irow('Ekspozycja AI',`${mo.ekspozycjaAI||0}%`,'c-p','Ekspozycja AI')+
+    irow('Ekspozycja Cloud',`${mo.ekspozycjaCloud||0}%`,'c-b')+
+    irow('Ekspozycja Cybersecurity',`${mo.ekspozycjaCyber||0}%`,'c-c')+
+    irow('Ekspozycja Semiconductor',`${mo.ekspozycjaSemi||0}%`,'c-a');
+
+  $('moatAI').innerHTML=`<div class="ai-header">🤖 ANALIZA MOAT</div><div class="ai-text">${mo.komentarzMoat||''}</div>`;
+
+  // ── TECHNICAL ───────────────────────────────────────────
+  const tr=t.trend||{};
+  $('techMetrics').innerHTML=
+    mc('Trend krótki',tr.krótki||'—',tc(tr.krótki))+mc('Trend średni',tr.średni||'—',tc(tr.średni))+
+    mc('RSI (14)',t.RSI||'—',t.RSI>70?'c-r':t.RSI<30?'c-g':'c-a',undefined,undefined,'RSI')+
+    mc('Złoty krzyż',t.złotyKrzyż?'TAK':'NIE',t.złotyKrzyż?'c-g':'c-r');
+
+  $('techTrend').innerHTML=
+    irow('Trend krótkoterm.',tr.krótki,tc(tr.krótki))+irow('Trend średnioterm.',tr.średni,tc(tr.średni))+
+    irow('Trend długoterm.',tr.długi,tc(tr.długi))+irow('Momentum',t.momentum,tc(t.momentum),'Momentum')+
+    irow('Złoty krzyż',t.złotyKrzyż?'Tak ✓':'Nie',t.złotyKrzyż?'c-g':'c-r','Złoty krzyż');
+
+  $('techOsc').innerHTML=
+    irow('RSI (14)',t.RSI,t.RSI>70?'c-r':t.RSI<30?'c-g':'c-a','RSI')+
+    irow('MA 50',t.MA50trend,tc(t.MA50trend))+irow('MA 200',t.MA200trend,tc(t.MA200trend))+
+    irow('Strefa wejścia',t.strefaWejścia,'c-g')+irow('Strefa wyjścia',t.strefaWyjścia,'c-r');
+
+  let srH='';
+  (t.opory||[]).forEach(x=>{srH+=irow(`Opór ${x.poziom}`,x.siła,'c-r')});
+  (t.wsparcia||[]).forEach(x=>{srH+=irow(`Wsparcie ${x.poziom}`,x.siła,'c-g')});
+  $('techSR').innerHTML=srH;
+  $('techRS').innerHTML=irow('Siła wzgl. NASDAQ',t.siłaNASDAQ,'c-b','Siła wzgl.')+irow('Siła wzgl. sektora',t.siłaSektora,'c-b','Siła wzgl.')+irow('Wolumen',t.wolumen,'c-c','Wolumen')+irow('Reakcja na earnings',t.reakcjaEarnings,'c-a');
+  $('techAI').innerHTML=`<div class="ai-header">🤖 ANALIZA TECHNICZNA</div><div class="ai-text">${t.komentarzTechniczny||''}</div>`;
+
+  // ── MANAGEMENT ──────────────────────────────────────────
+  $('mgmtMetrics').innerHTML=
+    mc('Jakość zarządu',z.jakośćOgólna||'—','c-b')+mc('Insider ownership',z.insiderOwnership,'c-g',undefined,undefined,'Insider Buying')+
+    mc('SBC / Przychód',z.SBCratio,'c-a')+mc('Buyback / Dywidenda',z.zwrotKapitału,'c-b');
+
+  $('mgmtCapital').innerHTML=
+    irow('Jakość alokacji kapitału',z.jakośćAlokacji,'c-g')+irow('Historia przejęć',z.historiaPrzejęć,'c-g')+
+    irow('Realizacja prognoz (guidance)',z.realizacjaGuidance,'c-g','Guidance')+
+    irow('Komunikacja z rynkiem',z.komunikacja,'c-b')+irow('Długoterminowa wizja',z.wizjaDługoterm,'c-p');
+
+  $('mgmtDilution').innerHTML=
+    irow('Stock-based compensation',z.SBCratio,'c-a','SBC')+irow('Rozcieńczanie udziałów',z.rozcieńczanie,'c-a')+
+    irow('Program buybacków',z.buybackProgram,'c-g','Buyback')+irow('Insider ownership',z.insiderOwnership,'c-g','Insider ownership');
+
+  $('mgmtAI').innerHTML=`<div class="ai-header">🤖 ANALIZA ZARZĄDU</div><div class="ai-text">${z.komentarzZarząd||''}</div>`;
+
+  // ── VALUATION ───────────────────────────────────────────
+  $('valMetrics').innerHTML=
+    mc('P/E',w.PE,'c-a',undefined,undefined,'P/E')+mc('EV/Revenue',w.EVrevenue,'c-a',undefined,undefined,'EV/S')+
+    mc('EV/ARR',w.EVARR,'c-a',undefined,undefined,'EV/S')+mc('PEG',w.PEG,parseFloat(w.PEG)<1?'c-g':parseFloat(w.PEG)<2?'c-a':'c-r');
+
+  $('valMultiples').innerHTML=
+    irow('P/E',w.PE,'c-a','P/E')+irow('P/S (Price/Sales)',w.PS,'c-a','P/S')+irow('EV/Revenue',w.EVrevenue,'c-a','EV/S')+
+    irow('EV/ARR',w.EVARR,'c-a','EV/S')+irow('EV/EBITDA',w.EVEBITDA,'c-a','EV/EBITDA')+irow('PEG ratio',w.PEG,parseFloat(w.PEG)<1?'c-g':'c-a');
+
+  $('valHistorical').innerHTML=
+    irow('Wycena vs historia 5y',w.vsHistoria,'c-a')+irow('Wycena vs sektor',w.vsSector,'c-a')+
+    irow('Premia/dyskonto do peer\'ów',w.premia,'c-a')+irow('Potencjał wzrostu do target',w.potencjał,tc(w.potencjał));
+
+  $('valAI').innerHTML=`<div class="ai-header">🤖 ANALIZA WYCENY</div><div class="ai-text">${w.komentarzWycena||''}</div>`;
+
+  // ── PROBABILITY ─────────────────────────────────────────
+  $('probScenMetrics').innerHTML=`
+    <div class="mc"><div class="mc-label">Scenariusz byczy</div><div class="mc-val c-g">${pb}%</div><div class="mc-sub">${sb.zakres||''}</div></div>
+    <div class="mc"><div class="mc-label">Scenariusz neutralny</div><div class="mc-val c-b">${pn}%</div><div class="mc-sub">${sn.zakres||''}</div></div>
+    <div class="mc"><div class="mc-label">Scenariusz niedźwiedzi</div><div class="mc-val c-r">${pbr}%</div><div class="mc-sub">${sbr.zakres||''}</div></div>`;
+
+  $('probRisks').innerHTML=(D.ryzyka||[]).map(x=>probItem(x,true)).join('');
+  $('probOpps').innerHTML=(D.szanse||[]).map(x=>probItem(x,false)).join('');
+
+  // ── SCENARIOS ───────────────────────────────────────────
+  function scenCard(sc,cls,lbl,col){
+    const p2=Math.round((sc.prawdopodobieństwo||0)/tot*100);
+    return`<div class="scen-card ${cls}"><div class="scen-lbl">${lbl}</div><div class="scen-prob" style="color:${col}">${p2}%</div><div class="scen-range">${sc.zakres||''}</div><div class="scen-items">${(sc.katalizatory||[]).map(k=>`<div class="scen-item"><span style="color:${col}">▸</span>${k}</div>`).join('')}</div><div style="font-size:12px;color:var(--text3);margin-top:10px;line-height:1.5">${sc.opis||''}</div></div>`
+  }
+  $('scenCards').innerHTML=scenCard(sb,'bull','▲ Byczy','var(--green)')+scenCard(sn,'neu','◆ Neutralny','var(--blue)')+scenCard(sbr,'bear','▼ Niedźwiedzi','var(--red)');
+  $('scenRat').innerHTML=`<div class="ai-header">🤖 UZASADNIENIE</div><div class="ai-text">${s.uzasadnienie||''}</div>`;
+
+  // ── RISKS / OPPS ─────────────────────────────────────────
+  $('risksPage').innerHTML=(D.ryzyka||[]).map(x=>probItem(x,true)).join('');
+  $('oppsPage').innerHTML=(D.szanse||[]).map(x=>probItem(x,false)).join('');
+
+  // ── AI ANALYST ───────────────────────────────────────────
+  $('aiThesis').innerHTML=`<div class="ai-header">🤖 TEZA INWESTYCYJNA</div><div class="ai-text">${ta.tezaInwestycyjna||''}</div>`;
+  $('aiBull').innerHTML=(ta.mocneStrony||[]).map(x=>swi(x,'var(--green)')).join('')+`<div style="margin-top:10px;font-size:13px;color:var(--text2);line-height:1.7">${ta.przypadekByczy||''}</div>`;
+  $('aiBear').innerHTML=(ta.słabeStrony||[]).map(x=>swi(x,'var(--red)')).join('')+`<div style="margin-top:10px;font-size:13px;color:var(--text2);line-height:1.7">${ta.przypadekNiedźwiedzi||''}</div>`;
+  $('aiRiskSum').innerHTML=`<div class="ai-header">🤖 PODSUMOWANIE RYZYK</div><div class="ai-text">${ta.podsumowanieRyzyk||''}</div>`;
+
+  // Navigate
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelector('.nav-item').classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $('page-overview').classList.add('active');
+}
+
+// ─── HISTORY ────────────────────────────────────────────────
+function saveHist(D){
+  try{let h=JSON.parse(localStorage.getItem('tech_hist')||'[]');h=h.filter(x=>x.ticker!==D.ticker);h.unshift({ticker:D.ticker,name:D.nazwaSpółki,score:D.ocenyAI?.ocenaOgólna,date:new Date().toLocaleDateString('pl-PL'),data:D});if(h.length>30)h=h.slice(0,30);localStorage.setItem('tech_hist',JSON.stringify(h));}catch(e){}
+}
+function loadHist(){try{return JSON.parse(localStorage.getItem('tech_hist')||'[]');}catch(e){return[];}}
+function renderHistory(){
+  const h=loadHist();
+  if(!h.length){$('historyList').innerHTML='<div style="color:var(--text3);font-family:var(--mono);font-size:12px;text-align:center;padding:3rem">Brak zapisanych analiz</div>';return;}
+  $('historyList').innerHTML=h.map((item,i)=>`
+    <div class="hist-item" onclick="loadFromHist(${i})">
+      <div class="hist-ticker">${item.ticker}</div>
+      <div class="hist-name">${item.name||''}</div>
+      <div class="hist-score" style="color:${sc(item.score||0)}">${item.score||'—'}</div>
+      <div class="hist-date">${item.date}</div>
+      <button class="hist-del" onclick="delHist(${i},event)">✕</button>
+    </div>`).join('');
+}
+function loadFromHist(i){const h=loadHist();if(h[i]){D=h[i].data;render(h[i].data);}}
+function delHist(i,e){e.stopPropagation();let h=loadHist();h.splice(i,1);localStorage.setItem('tech_hist',JSON.stringify(h));renderHistory();}
+
+$('tickerIn').addEventListener('keydown',e=>{if(e.key==='Enter')startAnalysis()});
+
+// ─── PROMPT ─────────────────────────────────────────────────
+function buildPrompt(ticker){
+return `WAŻNE: Przed wygenerowaniem analizy OBOWIĄZKOWO wyszukaj aktualne dane w internecie.
+Użyj narzędzia web search aby sprawdzić:
+- Aktualne wyniki finansowe spółki ${ticker} (ostatni raport kwartalny/roczny)
+- Aktualną cenę akcji i kapitalizację rynkową
+- Ostatnie newsy i wydarzenia dotyczące spółki (ostatnie 3 miesiące)
+- Aktualne prognozy analityków (consensus price target)
+- Ostatnie earnings call i guidance zarządu
+
+NIE używaj tylko wiedzy z treningu — dane finansowe muszą być aktualne na dzień dzisiejszy.
+Jeśli nie możesz wyszukać danych, wyraźnie zaznacz które wartości są szacunkowe.
+
+Jesteś ekspertem analitykiem spółek technologicznych w funduszu hedge fund. Przeprowadź PEŁNĄ analizę spółki ${ticker} z perspektywy inwestora technologicznego, używając AKTUALNYCH danych z internetu.
+
+Odpowiedz WYŁĄCZNIE jednym blokiem JSON. Zero tekstu przed ani po. Zachowaj DOKŁADNIE tę strukturę:
+
+\`\`\`json
+{
+  "ticker": "${ticker}",
+  "nazwaSpółki": "pełna oficjalna nazwa",
+  "podsektor": "SaaS / Semiconductors / Cloud / AI / Cybersecurity / Hardware / Fintech / E-commerce",
+  "sektor": "Technology",
+  "kraj": "USA",
+  "giełda": "NASDAQ",
+  "modelBiznesowy": "SaaS / Hardware / Marketplace / Platform",
+  "opisSpółki": "3-4 zdania: czym dokładnie zajmuje się spółka, co sprzedaje, komu, jaki problem rozwiązuje i dlaczego jest ważna na rynku. Napisz jak dla kogoś kto po raz pierwszy słyszy o tej spółce.",
+
+  "ocenyAI": {
+    "ocenaWzrostu": 80,
+    "ocenaMarż": 72,
+    "ocenaMoat": 85,
+    "ocenaTechniczna": 68,
+    "ocenaZarządu": 75,
+    "ocenaWyceny": 55,
+    "ryzykoHype": 40,
+    "ocenaOgólna": 74
+  },
+
+  "kluczoweDane": {
+    "przychodARR": "$26.0 mld ARR",
+    "wzrostPrzychodu": "+22%",
+    "NRR": "125%",
+    "ruleOf40": "58",
+    "marżaBrutto": "76%",
+    "marżaFCF": "36%",
+    "zadłużenieNetto": "-$8 mld (gotówka netto)",
+    "wycenaEVrevenue": "14x EV/Rev"
+  },
+
+  "wzrost": {
+    "wzrostYoY": "+22%",
+    "CAGR3": "+28%",
+    "NRR": "125%",
+    "churnRate": "5%",
+    "LTVCAC": "5.2x",
+    "cacPayback": "18 miesięcy",
+    "retencjaKlientów": "95%",
+    "wzrostKlientów": "+18% YoY",
+    "przychodyCykliczne": "82% (subskrypcje)",
+    "przychodyJednorazowe": "18%",
+    "widocznośćPrzychodów": "wysoka (82% cykliczne)",
+    "CAC": "$12,000 avg",
+    "komentarzWzrost": "3-4 zdania o jakości wzrostu i metryk SaaS/tech po polsku"
+  },
+
+  "marże": {
+    "marżaBrutto": "76%",
+    "marżaOperacyjna": "22%",
+    "marżaNetto": "18%",
+    "marżaFCF": "36%",
+    "trendMarż": "rosnący",
+    "FCFwartosc": "$9.4 mld",
+    "FCFnaAkcję": "$6.20",
+    "FCFyield": "2.8%",
+    "jakośćFCF": "wysoka",
+    "CAPEXintensity": "4%",
+    "magicNumber": "1.2",
+    "efektywnośćSM": "dobra",
+    "przychodNaPracownika": "$380k",
+    "RDratio": "15%",
+    "SMratio": "28%",
+    "GAratio": "8%",
+    "SBC": "8% przychodów",
+    "komentarzMarże": "3-4 zdania o jakości marż i FCF po polsku"
+  },
+
+  "moat": {
+    "siłaMoat": "bardzo silny",
+    "efektySieciowe": 85,
+    "switchingCosts": 80,
+    "daneIP": 75,
+    "skala": 90,
+    "ekosystem": 85,
+    "pricingPower": 70,
+    "ekspozycjaAI": 90,
+    "ekspozycjaCloud": 85,
+    "ekspozycjaCyber": 40,
+    "ekspozycjaSemi": 20,
+    "zależnośćHype": "umiarkowana",
+    "komentarzMoat": "3-4 zdania o sile moat i pozycji konkurencyjnej po polsku"
+  },
+
+  "technika": {
+    "trend": {"krótki": "wzrostowy", "średni": "wzrostowy", "długi": "wzrostowy"},
+    "momentum": "silny",
+    "RSI": 62,
+    "MA50trend": "powyżej",
+    "MA200trend": "powyżej",
+    "złotyKrzyż": true,
+    "wsparcia": [{"poziom": "$420","siła": "silne"},{"poziom": "$390","siła": "umiarkowane"}],
+    "opory": [{"poziom": "$480","siła": "silne"},{"poziom": "$520","siła": "umiarkowane"}],
+    "strefaWejścia": "$420–$440",
+    "strefaWyjścia": "$480–$510",
+    "siłaNASDAQ": "lepsza",
+    "siłaSektora": "lepsza od sektora",
+    "wolumen": "akumulacja",
+    "reakcjaEarnings": "pozytywna",
+    "komentarzTechniczny": "2-3 zdania o sytuacji technicznej po polsku"
+  },
+
+  "zarząd": {
+    "jakośćOgólna": "wysoka",
+    "insiderOwnership": "4.2%",
+    "SBCratio": "8% przychodów",
+    "rozcieńczanie": "umiarkowane",
+    "buybackProgram": "aktywny — $5 mld",
+    "jakośćAlokacji": "bardzo dobra",
+    "historiaPrzejęć": "dobra",
+    "realizacjaGuidance": "konsekwentnie bije prognozy",
+    "komunikacja": "przejrzysta",
+    "wizjaDługoterm": "silna",
+    "zwrotKapitału": "buyback + dywidenda",
+    "komentarzZarząd": "2-3 zdania o jakości zarządu po polsku"
+  },
+
+  "wycena": {
+    "PE": "32x",
+    "PS": "12x",
+    "EVrevenue": "14x",
+    "EVARR": "13x",
+    "EVEBITDA": "28x",
+    "PEG": "1.4",
+    "vsHistoria": "15% poniżej 5-letniej średniej",
+    "vsSector": "inline z sektorem",
+    "premia": "-5% do peer'ów",
+    "potencjał": "+25% do celu analityków",
+    "komentarzWycena": "2-3 zdania o wycenie po polsku"
+  },
+
+  "scenariusze": {
+    "byczy": {
+      "prawdopodobieństwo": 45,
+      "zakres": "$550–$680",
+      "katalizatory": ["akceleracja ARR", "ekspansja marż FCF", "AI tailwinds"],
+      "opis": "2 zdania po polsku"
+    },
+    "neutralny": {
+      "prawdopodobieństwo": 35,
+      "zakres": "$440–$510",
+      "katalizatory": ["stabilny wzrost", "utrzymanie NRR"],
+      "opis": "2 zdania po polsku"
+    },
+    "niedźwiedzi": {
+      "prawdopodobieństwo": 20,
+      "zakres": "$280–$380",
+      "katalizatory": ["spowolnienie ARR", "kompresja mnożnika", "churn wzrost"],
+      "opis": "2 zdania po polsku"
+    },
+    "uzasadnienie": "2-3 zdania uzasadnienia modelu po polsku"
+  },
+
+  "ryzyka": [
+    {"nazwa": "Kompresja mnożnika wyceny przy wzroście stóp", "prawdopodobieństwo": 40, "wpływNaKurs": "-20% do -35%", "wpływNaPrzychód": "0%", "wpływNaARR": "0%", "horyzont": "12m", "poziom": "Wysoki", "opis": "opis"},
+    {"nazwa": "Spowolnienie wzrostu ARR poniżej oczekiwań", "prawdopodobieństwo": 35, "wpływNaKurs": "-25% do -45%", "wpływNaPrzychód": "-10% do -20%", "wpływNaARR": "-15%", "horyzont": "6m", "poziom": "Wysoki", "opis": "opis"},
+    {"nazwa": "Wzrost churn — odpływ klientów do konkurencji", "prawdopodobieństwo": 25, "wpływNaKurs": "-15% do -30%", "wpływNaPrzychód": "-8% do -15%", "wpływNaARR": "-10%", "horyzont": "12m", "poziom": "Wysoki", "opis": "opis"},
+    {"nazwa": "Nowe regulacje AI / antytrust", "prawdopodobieństwo": 30, "wpływNaKurs": "-10% do -20%", "wpływNaPrzychód": "-5% do -10%", "wpływNaARR": "-5%", "horyzont": "18m", "poziom": "Średni", "opis": "opis"},
+    {"nazwa": "Intensywna konkurencja i presja cenowa", "prawdopodobieństwo": 45, "wpływNaKurs": "-8% do -18%", "wpływNaPrzychód": "-5% do -12%", "wpływNaARR": "-8%", "horyzont": "12m", "poziom": "Średni", "opis": "opis"},
+    {"nazwa": "Pęknięcie bańki wycen AI / hype correction", "prawdopodobieństwo": 25, "wpływNaKurs": "-30% do -50%", "wpływNaPrzychód": "0%", "wpływNaARR": "0%", "horyzont": "18m", "poziom": "Wysoki", "opis": "opis"}
+  ],
+
+  "szanse": [
+    {"nazwa": "Dalsza akceleracja adopcji AI — wzrost TAM", "prawdopodobieństwo": 60, "wpływNaKurs": "+25% do +50%", "wpływNaPrzychód": "+20% do +40%", "wpływNaARR": "+30%", "horyzont": "24m", "poziom": "Wysoki", "opis": "opis"},
+    {"nazwa": "Ekspansja marży FCF do 40%+", "prawdopodobieństwo": 50, "wpływNaKurs": "+15% do +30%", "wpływNaPrzychód": "0%", "wpływNaARR": "0%", "horyzont": "18m", "poziom": "Wysoki", "opis": "opis"},
+    {"nazwa": "Wzrost NRR powyżej 130% — upsell enterprise", "prawdopodobieństwo": 40, "wpływNaKurs": "+12% do +25%", "wpływNaPrzychód": "+10% do +20%", "wpływNaARR": "+15%", "horyzont": "12m", "poziom": "Średni", "opis": "opis"},
+    {"nazwa": "Przejęcie strategiczne rozszerzające platformę", "prawdopodobieństwo": 30, "wpływNaKurs": "+10% do +25%", "wpływNaPrzychód": "+8%", "wpływNaARR": "+10%", "horyzont": "18m", "poziom": "Średni", "opis": "opis"},
+    {"nazwa": "Short squeeze / wejście dużych funduszy", "prawdopodobieństwo": 20, "wpływNaKurs": "+20% do +40%", "wpływNaPrzychód": "0%", "wpływNaARR": "0%", "horyzont": "3m", "poziom": "Wysoki", "opis": "opis"},
+    {"nazwa": "Nowe linie produktowe / ekspansja rynku", "prawdopodobieństwo": 45, "wpływNaKurs": "+10% do +20%", "wpływNaPrzychód": "+5% do +15%", "wpływNaARR": "+12%", "horyzont": "18m", "poziom": "Średni", "opis": "opis"}
+  ],
+
+  "tezyAI": {
+    "tezaInwestycyjna": "4-5 zdań głównej tezy inwestycyjnej po polsku — dlaczego kupować/nie kupować",
+    "przypadekByczy": "3-4 zdania bullish case po polsku",
+    "przypadekNiedźwiedzi": "3-4 zdania bearish case po polsku",
+    "podsumowanieRyzyk": "3-4 zdania podsumowania kluczowych ryzyk po polsku",
+    "mocneStrony": ["mocna strona 1","mocna strona 2","mocna strona 3","mocna strona 4","mocna strona 5"],
+    "słabeStrony": ["słaba strona 1","słaba strona 2","słaba strona 3","słaba strona 4"]
+  }
+}
+\`\`\`
+
+Wypełnij WSZYSTKIE pola realnymi, aktualnymi danymi dla ${ticker}. Uwzględnij specyfikę podsektora (SaaS vs hardware vs semiconductor vs AI). Zachowaj dokładnie tę strukturę JSON. Wygeneruj dane tak abym mógł skopiować jednym kliknięciem.
+
+KRYTYCZNE ZASADY — MUSISZ ICH PRZESTRZEGAĆ:
+1. Odpowiedz WYŁĄCZNIE blokiem JSON — zero tekstu przed ani po, zero komentarzy
+2. JSON MUSI BYĆ KOMPLETNY — zamknij WSZYSTKIE nawiasy { } i [ ]
+3. Jeśli zbliżasz się do limitu długości — SKRÓĆ teksty opisowe do 1 zdania ale NIGDY nie urywaj struktury JSON
+4. Ostatni znak Twojej odpowiedzi MUSI być } zamykającym cały obiekt
+5. Sprawdź przed wysłaniem czy JSON jest poprawny — policz nawiasy otwierające i zamykające`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PDF GENERATION
+// ═══════════════════════════════════════════════════════════
+function generatePDF() {
+  const data = typeof D !== 'undefined' ? D : (typeof currentData !== 'undefined' ? currentData : null);
+  if (!data) { alert('Najpierw wygeneruj analizę spółki!'); return; }
+
+  const ticker  = data.ticker || data.nazwaSpołki?.split(' ')[0] || '—';
+  const company = data.nazwaSpołki || data.companyName || data.nazwaSpołki || ticker;
+  const score   = data.ocenyAI?.ocenaOgólna || data.investmentScore || '—';
+  const ts      = new Date().toLocaleString('pl-PL');
+  const sector  = data.podsektor || data.sektor || '';
+
+  // Collect all rendered page content
+  const pages = [
+    'page-overview','page-fundamental','page-fundamentals',
+    'page-growth','page-margins','page-moat',
+    'page-technical','page-management','page-macro','page-valuation',
+    'page-probability','page-scenarios','page-risks','page-opportunities','page-ai'
+  ];
+
+  // Build PDF content
+  const win = window.open('', '_blank', 'width=1000,height=800');
+  if (!win) { alert('Zezwól na wyskakujące okna w przeglądarce!'); return; }
+
+  // Capture chart images
+  const chartImages = {};
+  document.querySelectorAll('canvas').forEach(canvas => {
+    try { chartImages[canvas.id] = canvas.toDataURL('image/png'); } catch(e) {}
+  });
+
+  // Get score color
+  const scoreColor = score >= 70 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
+
+  // Build sections HTML
+  let sectionsHTML = '';
+  pages.forEach(pid => {
+    const el = document.getElementById(pid);
+    if (!el) return;
+    // Replace canvases with images
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll('canvas').forEach(c => {
+      if (chartImages[c.id]) {
+        const img = document.createElement('img');
+        img.src = chartImages[c.id];
+        img.style.cssText = 'max-width:100%;height:auto;border-radius:8px;';
+        c.parentNode.replaceChild(img, c);
+      }
+    });
+    // Remove buttons inside cloned content
+    clone.querySelectorAll('button, .btn, [onclick]').forEach(b => b.removeAttribute('onclick'));
+    sectionsHTML += `<div class="pdf-section">${clone.innerHTML}</div>`;
+  });
+
+  const html = `<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Raport — ${ticker} — ${ts}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:#0d1117; --bg2:#161b22; --bg3:#1f2937; --bg4:#374151;
+    --border:rgba(255,255,255,0.08); --border2:rgba(255,255,255,0.14);
+    --text:#e6edf3; --text2:#8b949e; --text3:#484f58;
+    --green:#22c55e; --blue:#3b82f6; --amber:#f59e0b; --red:#ef4444;
+    --purple:#a78bfa; --cyan:#06b6d4;
+    --mono:'Courier New',monospace; --sans:'Segoe UI','Helvetica',sans-serif;
+  }
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* COVER PAGE */
+  .cover {
+    width: 100%; min-height: 297mm;
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #1a2235 100%);
+    display: flex; flex-direction: column;
+    padding: 50mm 30mm;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute; top: -100px; right: -100px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(99,102,241,0.15), transparent 70%);
+  }
+  .cover-badge {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 4px;
+    color: var(--cyan); text-transform: uppercase; margin-bottom: 40px;
+    border: 1px solid rgba(6,182,212,0.3); display: inline-block;
+    padding: 6px 14px; border-radius: 4px; width: fit-content;
+  }
+  .cover-ticker {
+    font-size: 72px; font-weight: 900; letter-spacing: 8px;
+    background: linear-gradient(135deg, #e6edf3, #6366f1);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 12px; line-height: 1;
+  }
+  .cover-company { font-size: 22px; color: var(--text2); margin-bottom: 8px; font-weight: 300; }
+  .cover-sector { font-size: 13px; color: var(--text3); margin-bottom: 60px; font-family: var(--mono); }
+  .cover-score-wrap { display: flex; align-items: center; gap: 30px; margin-bottom: 50px; }
+  .cover-score-box {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 24px 32px; text-align: center;
+  }
+  .cover-score-label { font-family: var(--mono); font-size: 9px; letter-spacing: 3px; color: var(--text3); margin-bottom: 8px; text-transform: uppercase; }
+  .cover-score-num { font-family: var(--mono); font-size: 56px; font-weight: 900; line-height: 1; }
+  .cover-score-sub { font-size: 11px; color: var(--text2); margin-top: 6px; }
+  .cover-divider { flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+  .cover-meta { margin-top: auto; }
+  .cover-meta-row { display: flex; gap: 40px; }
+  .cover-meta-item { }
+  .cover-meta-label { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--text3); margin-bottom: 4px; }
+  .cover-meta-val { font-size: 13px; color: var(--text2); }
+  .cover-firm {
+    position: absolute; top: 30mm; right: 30mm;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+    color: rgba(255,255,255,0.2);
+  }
+
+  /* PAGE HEADER */
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--text3);
+  }
+  .ph-ticker { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 4px; }
+
+  /* SECTIONS */
+  .pdf-section { page-break-inside: avoid; margin-bottom: 28px; }
+
+  /* CARDS */
+  .card, .metric-card, .sc, .mc, .scen-card, .scard, .prob-item, .ai-block, .ai-b, .ai_block {
+    background: var(--bg2) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 10px !important;
+    padding: 14px !important;
+    margin-bottom: 10px !important;
+    break-inside: avoid;
+  }
+
+  /* GRIDS */
+  .g4, .grid-4, .scores, .score-band { display: grid !important; grid-template-columns: repeat(4,1fr) !important; gap: 8px !important; margin-bottom: 12px !important; }
+  .g3, .grid-3, .scen-grid, .scengrid { display: grid !important; grid-template-columns: repeat(3,1fr) !important; gap: 8px !important; margin-bottom: 12px !important; }
+  .g2, .grid-2, .sw-grid, .swgrid, .tech-grid, .tgrid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 8px !important; margin-bottom: 12px !important; }
+  .heatmap { display: grid !important; grid-template-columns: repeat(4,1fr) !important; gap: 8px !important; }
+
+  /* TYPOGRAPHY */
+  .card-title, .card-h, .sec-title, .seclabel, .section-title, .card_h { font-family: var(--mono) !important; font-size: 9px !important; letter-spacing: 2px !important; color: var(--text3) !important; text-transform: uppercase !important; margin-bottom: 10px !important; }
+  .score-num, .sc-val, .mc-val, .snum, .tb-score-num { font-family: var(--mono) !important; font-size: 26px !important; font-weight: 700 !important; }
+  .sc-lbl, .mc-label, .slabel, .metric-label { font-family: var(--mono) !important; font-size: 9px !important; letter-spacing: 1.5px !important; color: var(--text3) !important; text-transform: uppercase !important; }
+
+  /* COLORS */
+  .ci,.c-b,.cg2 { color: var(--blue) !important; }
+  .cg,.c-g,.cg { color: var(--green) !important; }
+  .ca,.c-a { color: var(--amber) !important; }
+  .cr,.c-r,.cr2 { color: var(--red) !important; }
+  .cv,.c-p { color: var(--purple) !important; }
+  .cs,.c-c { color: var(--cyan) !important; }
+  .g,.green { color: var(--green) !important; }
+  .r,.red { color: var(--red) !important; }
+  .a,.amber { color: var(--amber) !important; }
+
+  /* ROWS */
+  .irow, .ir, .ir-row, .ind-row, .tech-row, .trow, .sr-row, .srrow, .s-row, .perf-bar, .risk-item, .ri, .prob-item { border-bottom: 1px solid var(--border) !important; padding: 6px 0 !important; display: flex !important; justify-content: space-between !important; font-size: 12px !important; }
+  .irow-l, .irl, .ind-label, .tech-label, .tlabel, .irl { color: var(--text2) !important; }
+  .irow-r, .irr, .ind-val, .tech-val, .tval { font-family: var(--mono) !important; font-weight: 600 !important; }
+
+  /* TABLES */
+  .tbl { width: 100% !important; border-collapse: collapse !important; }
+  .tbl th { font-family: var(--mono) !important; font-size: 9px !important; letter-spacing: 1.5px !important; color: var(--text3) !important; padding: 6px 8px !important; border-bottom: 1px solid var(--border) !important; text-align: left !important; }
+  .tbl td { padding: 7px 8px !important; font-size: 11px !important; border-bottom: 1px solid var(--border) !important; color: var(--text2) !important; }
+
+  /* BADGES / TAGS */
+  .tag, .badge, .b-i, .b-g, .b-r, .b-a, .tag-i, .tag-g, .tag-r, .tag-a { font-family: var(--mono) !important; font-size: 10px !important; padding: 2px 7px !important; border-radius: 4px !important; display: inline-block !important; }
+
+  /* SW ITEMS */
+  .sw-item, .swi { display: flex !important; align-items: flex-start !important; gap: 7px !important; padding: 5px 0 !important; border-bottom: 1px solid var(--border) !important; font-size: 12px !important; color: var(--text2) !important; }
+
+  /* SCENARIO CARDS */
+  .scen-card.bull, .scard.bull { border-top: 3px solid var(--green) !important; }
+  .scen-card.neu, .scard.neu { border-top: 3px solid var(--blue) !important; }
+  .scen-card.bear, .scard.bear { border-top: 3px solid var(--red) !important; }
+
+  /* PROBABILITY BAR */
+  .prob-bar-wrap { height: 4px !important; background: var(--bg4) !important; border-radius: 4px !important; overflow: hidden !important; margin: 6px 0 !important; }
+  .prob-bar { height: 100% !important; border-radius: 4px !important; }
+
+  /* AI BLOCKS */
+  .ai-block, .ai-b, .ai_block { background: rgba(99,102,241,0.05) !important; border: 1px solid rgba(99,102,241,0.15) !important; }
+  .ai-header, .ai-h, .ai-hdr { color: #6366f1 !important; font-family: var(--mono) !important; font-size: 10px !important; letter-spacing: 2px !important; margin-bottom: 7px !important; }
+  .ai-text, .ai-t, .ai-txt { font-size: 12px !important; color: var(--text2) !important; line-height: 1.7 !important; }
+
+  /* HIDE INTERACTIVE ELEMENTS */
+  button, .btn, .btn-analyze, .btn-back, .back-btn,
+  .s-reset, .btn-danger, [onclick], .ai-dot { display: none !important; }
+
+  /* DISCLAIMER */
+  .disclaimer {
+    margin-top: 40px; padding: 20px; border-top: 1px solid var(--border);
+    font-family: var(--mono); font-size: 9px; color: var(--text3); line-height: 1.7;
+    page-break-inside: avoid;
+  }
+  .disclaimer-title { font-size: 10px; letter-spacing: 2px; color: var(--text3); margin-bottom: 8px; }
+
+  /* PAGE NUMBERS */
+  @page { size: A4; margin: 15mm 12mm 20mm 12mm; }
+  @page :bottom { content: counter(page); }
+
+  /* PRINT */
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .cover { min-height: 260mm; }
+    .pdf-section { page-break-inside: avoid; }
+  }
+
+  /* SCORE BAR */
+  .sc-bar, .sbar-wrap, .metric-bar { height: 3px !important; background: var(--bg4) !important; border-radius: 3px !important; overflow: hidden !important; margin-top: 6px !important; }
+  .sc-fill, .sbar, .metric-fill { height: 100% !important; border-radius: 3px !important; }
+
+  /* ALLOC */
+  .alloc-item { display: flex !important; align-items: center !important; gap: 8px !important; padding: 4px 0 !important; font-size: 12px !important; }
+  .alloc-bar-wrap { width: 60px !important; height: 4px !important; background: var(--bg4) !important; border-radius: 2px !important; overflow: hidden !important; }
+
+  img { max-width: 100% !important; height: auto !important; }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="cover-firm">ANALIZA INWESTYCYJNA</div>
+  <div class="cover-badge">&#9635; Raport Analityczny AI &bull; Hedge Fund Edition</div>
+  <div class="cover-ticker">${ticker}</div>
+  <div class="cover-company">${company}</div>
+  <div class="cover-sector">${sector}</div>
+  <div class="cover-score-wrap">
+    <div class="cover-score-box">
+      <div class="cover-score-label">Investment Score</div>
+      <div class="cover-score-num" style="color:${scoreColor}">${score}</div>
+      <div class="cover-score-sub">${score >= 70 ? 'Rekomendacja: KORZYSTNA' : score >= 50 ? 'Rekomendacja: NEUTRALNA' : 'Rekomendacja: OSTROŻNA'}</div>
+    </div>
+    <div class="cover-divider"></div>
+    <div style="color:var(--text2);font-size:13px;line-height:2">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:8px">KLUCZOWE METRYKI</div>
+      ${data.kluczoweDane ? Object.entries(data.kluczoweDane).slice(0,6).map(([k,v]) => 
+        `<div><span style="color:var(--text3);font-size:11px">${k}: </span><span style="font-family:monospace;color:var(--text)">${v}</span></div>`
+      ).join('') : ''}
+    </div>
+  </div>
+  <div class="cover-meta">
+    <div class="cover-meta-row">
+      <div class="cover-meta-item"><div class="cover-meta-label">Data generowania</div><div class="cover-meta-val">${ts}</div></div>
+      <div class="cover-meta-item"><div class="cover-meta-label">Analizowany ticker</div><div class="cover-meta-val" style="font-family:monospace;letter-spacing:2px">${ticker}</div></div>
+      <div class="cover-meta-item"><div class="cover-meta-label">Typ raportu</div><div class="cover-meta-val">Analiza AI &bull; Pełny raport</div></div>
+      <div class="cover-meta-item"><div class="cover-meta-label">Wersja</div><div class="cover-meta-val">Hedge Fund Edition v2.0</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT CONTENT -->
+<div style="padding:0">
+  SECTIONS_PLACEHOLDER
+  
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">
+    <div class="disclaimer-title">WAŻNY DISCLAIMER INWESTYCYJNY</div>
+    Niniejszy raport został wygenerowany przez system AI i ma charakter wyłącznie edukacyjny i informacyjny. 
+    Nie stanowi porady inwestycyjnej, rekomendacji ani oferty zakupu lub sprzedaży jakichkolwiek instrumentów finansowych. 
+    Wyniki historyczne nie gwarantują przyszłych wyników. Każda decyzja inwestycyjna powinna być poprzedzona własną analizą 
+    i konsultacją z licencjonowanym doradcą inwestycyjnym. Autor raportu nie ponosi odpowiedzialności za jakiekolwiek straty 
+    wynikające z decyzji podjętych na podstawie niniejszego dokumentu.
+    Raport wygenerowano: ${ts} &bull; Ticker: ${ticker} &bull; System: AI Investment Analyzer
+  </div>
+</div>
+
+<scr' + 'ipt>
+// Auto-print after load
+window.onload = function() {
+  setTimeout(function() {
+    window.print();
+  }, 1200);
+};
+<\/scr' + 'ipt>
+</body>
+</html>`;
+
+  win.document.write(html.replace('SECTIONS_PLACEHOLDER', sectionsHTML));
+  win.document.close();
+}
+// ═══════════════════════════════════════════════════════
+// KALKULATOR ZYSKU / STRATY
+// ═══════════════════════════════════════════════════════
+function initCalc(currentPrice){
+  const w=document.getElementById('calcWrapper');
+  if(w)w.style.display='block';
+  const buyInp=document.getElementById('calcBuy');
+  if(buyInp&&currentPrice&&currentPrice>0){
+    buyInp.value=currentPrice;
+    buyInp.title='Aktualny kurs z analizy: $'+currentPrice;
+  }
+  runCalc();
+}
+
+function runCalc(){
+  const amount=parseFloat(document.getElementById('calcAmount')?.value)||0;
+  const buyPx=parseFloat(document.getElementById('calcBuy')?.value)||0;
+  const target=parseFloat(document.getElementById('calcTarget')?.value)||0;
+  const stop=parseFloat(document.getElementById('calcStop')?.value)||0;
+  const resultsEl=document.getElementById('calcResults');
+  const warningEl=document.getElementById('calcWarning');
+  if(!resultsEl)return;
+  if(!amount||!buyPx||!target){resultsEl.style.display='none';if(warningEl)warningEl.style.display='none';return;}
+  resultsEl.style.display='grid';
+  const shares=amount/buyPx;
+  const exitValue=shares*target;
+  const profit=exitValue-amount;
+  const profitPct=(profit/amount)*100;
+  const hasStop=stop>0&&stop<buyPx;
+  const stopValue=hasStop?shares*stop:0;
+  const loss=hasStop?stopValue-amount:0;
+  const lossPct=hasStop?(loss/amount)*100:0;
+  const rr=hasStop&&loss!==0?Math.abs(profit/loss):null;
+  const fmtUSD=v=>(v>=0?'+':'')+'\$'+Math.abs(v).toFixed(2);
+  const fmtPct=v=>(v>=0?'+':'')+v.toFixed(2)+'%';
+  document.getElementById('crShares').textContent=shares.toFixed(4);
+  document.getElementById('crSharesSub').textContent='\$'+buyPx+' × '+shares.toFixed(4);
+  document.getElementById('crProfit').textContent=fmtUSD(profit);
+  document.getElementById('crProfit').style.color=profit>=0?'var(--green)':'var(--red)';
+  document.getElementById('crProfitPct').textContent=fmtPct(profitPct)+' · \$'+exitValue.toFixed(2);
+  if(hasStop){
+    document.getElementById('crLoss').textContent=fmtUSD(loss);
+    document.getElementById('crLossPct').textContent=fmtPct(lossPct)+' · \$'+stopValue.toFixed(2);
+    document.getElementById('crLossCard').style.opacity='1';
+  }else{
+    document.getElementById('crLoss').textContent='brak SL';
+    document.getElementById('crLossPct').textContent='nie ustawiono stop-loss';
+    document.getElementById('crLossCard').style.opacity='0.4';
+  }
+  if(rr!==null){
+    document.getElementById('crRR').textContent=rr.toFixed(2)+'x';
+    document.getElementById('crRR').style.color=rr>=2?'var(--green)':rr>=1?'var(--amber)':'var(--red)';
+    document.getElementById('crRRSub').textContent=rr>=2?'dobry stosunek':rr>=1?'akceptowalny':'ryzykowny';
+  }else{
+    document.getElementById('crRR').textContent='—';
+    document.getElementById('crRRSub').textContent='dodaj stop-loss';
+  }
+  if(warningEl){
+    const warnings=[];
+    if(target<buyPx)warnings.push('⚠ Cena docelowa niższa od ceny zakupu — to strata, nie zysk.');
+    if(hasStop&&stop>=buyPx)warnings.push('⚠ Stop-loss powyżej ceny zakupu — ustaw go poniżej.');
+    if(rr!==null&&rr<1)warnings.push('⚠ Risk/Reward poniżej 1 — ryzykujesz więcej niż możesz zarobić.');
+    if(profitPct>100)warnings.push('ℹ Bardzo ambitny cel +'+profitPct.toFixed(0)+'% — upewnij się że target jest realistyczny.');
+    if(warnings.length){warningEl.style.display='block';warningEl.innerHTML=warnings.join('<br>');}
+    else{warningEl.style.display='none';}
+  }
+}
+
+</script>
+</body>
+</html>`;
